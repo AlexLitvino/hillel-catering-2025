@@ -123,10 +123,79 @@ class UserAdmin(admin.ModelAdmin):
     pass
 ```
 
-
-
 https://docs.djangoproject.com/en/5.2/topics/class-based-views/
 https://www.django-rest-framework.org/tutorial/3-class-based-views/
+
+
+# Lesson 19
+python manage.py startapp food
+To settings.py add "food" to INSTALLED_APPS
+
+In models.py add, but move it to specific module enums.py:
+(First of all describe existing states)
+```python
+import enum
+
+class OrderStatus(enum.StrEnum):
+    NOT_STARTED = enum.auto()
+    COOKING_REJECTED = enum.auto()
+    COOKING = enum.auto()
+    COOKED = enum.auto()
+    DELIVERY_LOOKUP = enum.auto()
+    DELIVERY = enum.auto()
+    DELIVERED = enum.auto()
+    NOT_DELIVERED = enum.auto()
+    CANCELLED_BY_CUSTOMER = enum.auto()
+    CANCELLED_BY_MANAGER = enum.auto()
+    CANCELLED_BY_ADMIN = enum.auto()
+    CANCELLED_BY_RESTAURANT = enum.auto()
+    CANCELLED_BY_DRIVER = enum.auto()
+    FAILED = enum.auto()
+```
+
+In models.py add models for Restaurant, Dish, Order and OrderItem:
+```python
+
+```
+Foreign key is suggested to specify not as class - Restaurant, but as string "Restaurant"
+In CharField you could specify choices - it would be dropdown in admin panel. It should be collection of collection. For this, adding method choices to enums.Order
+
+Provider could be kept as Order in code or in DB. It depends whether you will change providers during app work. Keeping provider in code - faster.
+If keep in code - use CHarField, if in separate DB table - use Foreign key - for this, before food app create Logistic app to define providers.
+
+In Order, user field is foreign key but it is specified via settings.py: settings.AUTH|_USER_MODEL
+
+CASCADE update usually is not used. More often data sets to null.
+
+Make migrations:
+manage.py makemigrations food
+manage.py migrate
+
+Register food models for admin
+t=3442
+```python
+
+```
+
+Override __str__ in model to make view in admin panel.
+ANOTHER way to display is to define list_display = ("id", "name") - columns you want to see - in ***Admin class.
+First element is a link, so id could be moved to the end and at the beginning have name for convenience.
+
+search_fields = ("name",) - to add search
+list_filter = ("name",) - filters
+
+Tabular inline???
+
+1:08
+...
+
+
+APIViewSet create() method - validate, save to DB and return data
+ModelSerializer works same as ModelAdmin
+
+AUTH_PASSWORD_VALIDATORS - restrictions for password, in settings.py
+
+Password should be hashed before saving
 
 
 ## pipenv commands
