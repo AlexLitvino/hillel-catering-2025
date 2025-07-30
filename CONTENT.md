@@ -174,7 +174,16 @@ manage.py migrate
 Register food models for admin
 t=3442
 ```python
+admin.site.register(Restaurant)
+admin.site.register(OrderItem)
 
+
+@admin.register(Dish)
+class DishAdmin(admin.ModelAdmin):
+    list_display = ("name", "price", "restaurant")
+    search_fields = ("name",)
+    list_filter = ("name", "restaurant")
+    # actions = ("import_csv",)
 ```
 
 Override __str__ in model to make view in admin panel.
@@ -185,10 +194,14 @@ search_fields = ("name",) - to add search
 list_filter = ("name",) - filters
 
 Tabular inline???
+```python
+class DishOrderItemInline(admin.TabularInline):
+    model = OrderItem
+```
 
-1:08
-...
+## User
 
+Advanced REST Client 
 
 APIViewSet create() method - validate, save to DB and return data
 ModelSerializer works same as ModelAdmin
@@ -196,6 +209,9 @@ ModelSerializer works same as ModelAdmin
 AUTH_PASSWORD_VALIDATORS - restrictions for password, in settings.py
 
 Password should be hashed before saving
+
+
+python manage.py shell
 
 
 ## pipenv commands
