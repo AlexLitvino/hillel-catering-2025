@@ -214,6 +214,20 @@ Password should be hashed before saving
 python manage.py shell
 
 
+permission_classes - functions that returns boolean value
+
+Access matrix = Role X Endpoint
+Approach: Close everything and open if needed
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated'
+    ],
+}
+```
+
+
+
 ## pipenv commands
 pipenv shell
 pipenv graph

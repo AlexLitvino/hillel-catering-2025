@@ -35,7 +35,14 @@ class UserSerializer(serializers.ModelSerializer):
 class UsersAPIViewSet(viewsets.GenericViewSet):
 
     authentication_classes = [JWTAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
+    #permission_classes = [permissions.AllowAny]  # was IsAuthenticate but user creation should be allowed without auth
+
+    def get_permissions(self):
+        #return super().get_permissisons()
+        if self.action == "create":
+            return [permissions.AllowAny()]
+        else:
+            return [permissions.IsAuthenticated()]
 
     def list(self, request: Request):
         # instead of this:
