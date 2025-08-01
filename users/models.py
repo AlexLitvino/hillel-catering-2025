@@ -46,7 +46,7 @@ class UserManager(BaseUserManager):
 
         extra_fields["is_staff"] = True
         extra_fields["is_superuser"] = True
-        extra_fields["role"] = Role.CUSTOMER
+        extra_fields["role"] = Role.ADMIN
 
         user = self.model(email=email, password=password, **extra_fields)  # aka User() - instance of table
         user.save()

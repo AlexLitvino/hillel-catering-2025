@@ -30,5 +30,4 @@ urlpatterns = [
     path('auth/token/', TokenObtainPairView.as_view(), name='obtain_token'),
     path("users/", include(users_router.urls)),
     path("food/", include(food_router.urls)),
-
 ]

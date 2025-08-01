@@ -1,6 +1,5 @@
 from datetime import date
 
-from django.shortcuts import render
 from rest_framework import  viewsets, serializers, routers, permissions
 from rest_framework.decorators import action
 from rest_framework.request import Request
@@ -74,7 +73,7 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
 
     def get_permissions(self):
         match self.action:
-            case "all_orders":
+            case "all_orders" | "create_dish":
                 return [permissions.IsAuthenticated(), IsAdmin()]
             case _:
                 return [permissions.IsAuthenticated()]
@@ -101,9 +100,34 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
         serializer = RestaurantSerializer(restaurants, many=True)
         return Response(serializer.data)
 
+
+    @action(methods=["post"], detail=False, url_path=r"create-dishes")
+    def create_dish(self, request: Request):
+        """
+        {
+            "name": "Salad",
+            "price": 23,
+            "restaurant": 1
+        }
+        """
+        serializer = DishSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # as "restaurant" is excluded from DishSerializer it should be passed manually
+        restaurant_id = request.data.get("restaurant")
+        restaurant = Restaurant.objects.get(id=restaurant_id)
+
+        dish = serializer.save(restaurant=restaurant)
+
+        return Response(DishSerializer(dish).data, status=201)
+
+
     # HTTP POST food/orders
+    # I renamed url_path for this method to create-orders as it stops working
+    # ChatGPT states that we could have only one method with unique url_path and need to dispatch GET/POST inside method
+    # or rename url_path
     @transaction.atomic
-    @action(methods=["post"], detail=False, url_path=r"orders")
+    @action(methods=["post"], detail=False, url_path=r"create-orders")
     def create_order(self, request: Request):
         """
         >>> HTTP Request
