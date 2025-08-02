@@ -20,7 +20,7 @@ class DishOrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("__str__", "id", "status")
+    list_display = ("__str__", "status", "delivery_provider", "id")
     inlines = (DishOrderItemInline,)
 
 @admin.register(Restaurant)

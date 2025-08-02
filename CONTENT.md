@@ -227,6 +227,90 @@ REST_FRAMEWORK = {
 ```
 
 
+## Filtering
+Using GET or POST method? Depending on length of request
+
+django-filters?
+
+Set default filter backend in settings.py
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
+}
+
+request.query_params
+request.query_params.get("status")
+
+Filtering by query_params:
+```python
+    @action(methods=["get"], detail=False, url_path=r"orders")  # , name="orders_list" ???
+    def all_orders(self, request):
+        status: str | None = request.query_params.get("status")
+
+        orders = Order.objects.all() if status is None else Order.objects.filter(status=status)
+        serializer = OrderSerializer(orders, many=True)
+        return Response(serializer.data)
+```
+
+Using built-in search_fields is not very good as it performs search by all columns that slow down search
+https://www.django-rest-framework.org/api-guide/filtering/#searchfilter
+
+
+## Pagination
+https://www.django-rest-framework.org/api-guide/pagination/
+
+It enables pagination for all ListViewSet
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 100
+}
+```
+
+### PageNumberPagination - page1, page2, ...
+```python
+        paginator = PageNumberPagination()
+        paginator.page_size = 2
+        page = paginator.paginate_queryset(orders, request, view=self)
+        if page is not None:
+            serializer = OrderSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+
+        serializer = OrderSerializer(orders, many=True)
+        return Response(serializer.data)
+```
+
+### LimitOffsetPagination - show more pagination
+Problem with removing elements - some data could be not shown
+
+
+## DB snapshot
+Use it to load test data into DB. Keep in /fixture directory 
+python manage.py dumpdata --natural-primary --natural-foreign --indent 2 > /tmp/dump.json
+python manage.py loaddata /tmp/dump.json
+
+
+## Importing dishes.csv
+Create templates/admin/dish/change_list.html
+In settings.py
+```python
+TEMPLATES = [
+    {
+        "DIRS": [BASE_DIR / "templates"],
+    }
+```
+Need to inherit:
+{% extends "admin/change_list.html" %}
+
+To get files input should have name attribute and enctype="multipart/form-data" 
+<form action="import-dishes/" method="POST" enctype="multipart/form-data">
+<input type="file" name="file" accept="csv" />
+
+Return to where started
+return redirect(request.META.get("HTTP_REFERER", "/"))
+
+For case insensitive:
+rest = Restaurant.objects.get(name__icontains=restaurant_name.lower())
+
 
 ## pipenv commands
 pipenv shell
