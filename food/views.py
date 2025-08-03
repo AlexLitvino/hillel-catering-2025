@@ -4,12 +4,14 @@ from datetime import date
 from typing import Any
 
 from rest_framework import  viewsets, serializers, routers, permissions
-from rest_framework.decorators import action
+from rest_framework.decorators import action, permission_classes, api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError  # always returns status_code=400
+from rest_framework.exceptions import PermissionDenied, ValidationError  # always returns status_code=400
 from django.db import transaction
 from django.shortcuts import redirect
+
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.pagination import PageNumberPagination
@@ -100,6 +102,11 @@ class BaseFilters:
         errors: dict[str, dict[str, Any]] = {"queryParams": {}}
 
         for key, value in kwargs.items():
+
+            # filter shouldn't define extract methods for pagination query params
+            if key in ['page', 'size', 'limit', 'offset']:
+                continue
+
             _key = self.camel_to_snake_case(key)
 
             try:
@@ -172,8 +179,20 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
             }
         ]
         """
-        restaurants = Restaurant.objects.all()
-        serializer = RestaurantSerializer(restaurants, many=True)
+        # restaurants = Restaurant.objects.all()
+        # serializer = RestaurantSerializer(restaurants, many=True)
+        # return Response(serializer.data)
+
+        name: str | None = request.query_params.get("name")
+        dishes = Dish.objects.all() if name is None else Dish.objects.filter(name__icontains=name)
+
+        paginator = LimitOffsetPagination()
+        page = paginator.paginate_queryset(dishes, request, view=self)
+        if page is not None:
+            serializer = DishSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+
+        serializer = DishSerializer(dishes, many=True)
         return Response(serializer.data)
 
 
@@ -275,17 +294,12 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
 
     @action(methods=["get"], detail=False, url_path=r"orders")  # , name="orders_list" ???
     def all_orders(self, request):
-        #filters = FoodFilters(**request.query_params.dict())
+        filters = FoodFilters(**request.query_params.dict())
 
-        status: str | None = request.query_params.get("status")
-
+        #status: str | None = request.query_params.get("status")
         #orders = Order.objects.all() if status is None else Order.objects.filter(status=status)
-        # FIXME: 'FoodFilters' object has no attribute 'delivery_provider when no query-params
-        #orders = Order.objects.all() if filters.delivery_provider is None else Order.objects.filter(delivery_provider=filters.delivery_provider)
 
-        orders = Order.objects.all()
-
-        serializer = OrderSerializer(orders, many=True)
+        orders = Order.objects.all() if not hasattr(filters, "delivery_provider") else Order.objects.filter(delivery_provider=filters.delivery_provider)
 
         # # Page Number Pagination
         # paginator = PageNumberPagination()
@@ -294,12 +308,6 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
         # if page is not None:
         #     serializer = OrderSerializer(page, many=True)
         #     return paginator.get_paginated_response(serializer.data)
-        # # FIXME: {{BASE_URL}}/food/orders?page=1&size=2
-        # # {
-        # #     "queryParams": {
-        # #         "page": "You forgot to define `extract_page` method in  your FoodFilters class"
-        # #     }
-        # # }
         #
         # serializer = OrderSerializer(orders, many=True)
         # return Response(serializer.data)
@@ -317,9 +325,13 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
         return Response(serializer.data)
 
 
+@login_required  #  uses Django’s session cookie (what browser sends after login)
 def import_dishes(request):
     if request.method != "POST":
         raise ValueError(f"Method {request.method} is not allowed on this resource")
+
+    if not request.user.role == Role.ADMIN:
+        raise PermissionDenied("Only admins can import dishes.")
 
     csv_file = request.FILES.get("file")
     if csv_file is None:
@@ -334,6 +346,7 @@ def import_dishes(request):
             rest = Restaurant.objects.get(name__icontains=restaurant_name.lower())
         except Restaurant.DoesNotExist:
             print(f"Skipping restaurant {restaurant_name}")
+            continue
         else:
             print(f"Restaurant {rest} found")
 
@@ -343,10 +356,6 @@ def import_dishes(request):
     print(f"{total} dishes uploaded to the database")
 
     return redirect(request.META.get("HTTP_REFERER", "/"))
-
-
-
-
 
 
 router = routers.DefaultRouter()
