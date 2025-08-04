@@ -17,6 +17,7 @@ mypy="~=1.15.0"   # types checking
 ipdb="~=0.13.13"  # debugger
 django-stubs = { version = "~=5.2.1", extras=["compatible-mypy"] }
 djangorestframework-stubs = { version = "~=3.16.0", extras=["compatible-mypy"] }
+requests="~=2.32.4"  # test client
 
 [requires]
 python_version = "3.13"
