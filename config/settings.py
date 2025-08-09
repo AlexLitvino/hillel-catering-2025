@@ -201,6 +201,7 @@ CACHES = {
     }
 }
 
+ACTIVATION_EXPIRATION_TIME = 40
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"  # smtp.EmailBackend
 

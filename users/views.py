@@ -4,9 +4,12 @@ from rest_framework import  viewsets, routers, permissions, serializers
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from django.contrib.auth.hashers import make_password
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from django.shortcuts import get_object_or_404
+
+from django.contrib.auth.hashers import make_password
+from django.db import transaction
 
 from .models import User
 from .services import ActivationService
@@ -39,6 +42,9 @@ class UserSerializer(serializers.ModelSerializer):
 class UserActivationSerializer(serializers.Serializer):
     key = serializers.UUIDField()
 
+class UserResendActivationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
 class UsersAPIViewSet(viewsets.GenericViewSet):
 
     authentication_classes = [JWTAuthentication]
@@ -48,7 +54,7 @@ class UsersAPIViewSet(viewsets.GenericViewSet):
         #return super().get_permissisons()
         if self.action == "create":
             return [permissions.AllowAny()]
-        elif self.action == "activate":
+        elif self.action == "activate" or self.action == "resend_activation":
             return [permissions.AllowAny()]
         else:
             return [permissions.IsAuthenticated()]
@@ -68,6 +74,7 @@ class UsersAPIViewSet(viewsets.GenericViewSet):
         return Response(UserSerializer(request.user).data, status=200)
 
 
+    @transaction.atomic
     def create(self, request: Request):
         # to validate data
         serializer = UserSerializer(data=request.data)
@@ -105,7 +112,23 @@ class UsersAPIViewSet(viewsets.GenericViewSet):
 
         return Response(data=None, status=204)
 
+    @action(methods=["POST"], detail=False)
+    def resend_activation(self, request: Request):
+        serializer = UserResendActivationSerializer(data=request.data)
+        serializer.is_valid()
+
+        email = serializer.validated_data["email"]
+        activation_service = ActivationService(email=email)
+        activation_key = activation_service.create_activation_key()
+        user_id = get_object_or_404(User, email=email).id
+        activation_service.save_activation_information(
+            user_id=user_id,
+            activation_key=activation_key
+        )
+
+        activation_service.send_user_activation_email(activation_key=activation_key)
+
+        return Response(data=None, status=204)
+
 router = routers.DefaultRouter()
 router.register(r"", UsersAPIViewSet, basename="user")
-
-

@@ -1,6 +1,7 @@
 import uuid
 
 from django.core.mail import send_mail
+from django.conf import settings
 
 from shared.cache import CacheService
 from .models import User
@@ -33,7 +34,7 @@ class ActivationService:
         payload = {
             "user_id": user_id
         }
-        self.cache.set(namespace="activation", key=str(activation_key), value=payload, ttl=800)
+        self.cache.set(namespace="activation", key=str(activation_key), value=payload, ttl=settings.ACTIVATION_EXPIRATION_TIME)
         return None
 
     def send_user_activation_email(self, activation_key: str):
@@ -57,6 +58,7 @@ class ActivationService:
         user.is_active = True
         user.save()
         # OR User.objects.filter(id=user...).update(is_active=True)
+        self.cache.delete(namespace="activation", key=activation_key)
 
     # TODO: implement
     def resend_activation_link(self, email: str) -> None:

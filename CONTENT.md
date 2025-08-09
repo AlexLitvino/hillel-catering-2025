@@ -338,7 +338,10 @@ Django cache settings:
 https://docs.djangoproject.com/en/5.2/ref/settings/#caches
 
 ### Redis
-redis-cli
+https://redis.readthedocs.io/en/latest/
+https://redis.readthedocs.io/en/latest/commands.html#redis.commands.cluster.RedisClusterCommands.delete
+
+redis-cli  - to start CLI
 ```shell
 root@c8a4bd9ab346:/data# redis-cli
 127.0.0.1:6379> set name John
@@ -365,6 +368,11 @@ pipenv install redis
 
 Mailhog - to test emails
 Mailpit - newer service to test emails (Web + SMTP)
+
+
+
+
+
 
 
 nixOS

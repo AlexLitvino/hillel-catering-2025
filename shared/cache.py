@@ -15,7 +15,6 @@ class Structure:
     name: str
 
 
-
 class CacheService:
     """
     set(namespace='user_activation', key='12', value=Activation(...))
@@ -49,6 +48,7 @@ class CacheService:
 
         return json.loads(result)
 
-    # TODO: implement
     def delete(self, namespace: str, key: str):
-        raise NotImplementedError
+        self.connection.delete(
+            self._build_key(namespace, key)
+        )
