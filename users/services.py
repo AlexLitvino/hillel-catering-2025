@@ -59,8 +59,3 @@ class ActivationService:
         user.save()
         # OR User.objects.filter(id=user...).update(is_active=True)
         self.cache.delete(namespace="activation", key=activation_key)
-
-    # TODO: implement
-    def resend_activation_link(self, email: str) -> None:
-        """Send user activation link to specified email"""
-        raise NotImplementedError
