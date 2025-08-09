@@ -5,8 +5,11 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth.hashers import make_password
+from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 
 from .models import User
+from .services import ActivationService
 
 # validation class based on existing model
 class UserSerializer(serializers.ModelSerializer):
@@ -29,8 +32,12 @@ class UserSerializer(serializers.ModelSerializer):
     def validate(self, attrs: dict[str, Any]):
         """Change password to its hash to make Token-based authentication available"""
         attrs["password"] = make_password(attrs["password"])
+        attrs["is_active"] = False
 
         return super().validate(attrs=attrs)
+
+class UserActivationSerializer(serializers.Serializer):
+    key = serializers.UUIDField()
 
 class UsersAPIViewSet(viewsets.GenericViewSet):
 
@@ -40,6 +47,8 @@ class UsersAPIViewSet(viewsets.GenericViewSet):
     def get_permissions(self):
         #return super().get_permissisons()
         if self.action == "create":
+            return [permissions.AllowAny()]
+        elif self.action == "activate":
             return [permissions.AllowAny()]
         else:
             return [permissions.IsAuthenticated()]
@@ -66,10 +75,37 @@ class UsersAPIViewSet(viewsets.GenericViewSet):
         #     return Response()  # with errors
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()  # can't be saved before validation (serializer.is_valid())
+
+        #Activation process
+        activation_service = ActivationService(
+            email=serializer.instance.email
+            # email = getattr(serializer.instance, "email")
+        )
+        activation_key = activation_service.create_activation_key()
+        activation_service.save_activation_information(
+            user_id=serializer.instance.id,
+            activation_key=activation_key
+        )
+
+        activation_service.send_user_activation_email(activation_key=activation_key)
+
         return Response(UserSerializer(serializer.instance).data, status=201)
 
+    @action(methods=["POST"], detail=False)
+    def activate(self, request: Request) -> Response:
+        serializer = UserActivationSerializer(data=request.data)
+        serializer.is_valid()
+
+        activation_service = ActivationService()
+
+        try:
+            activation_service.activate_user(activation_key=serializer.validated_data["key"])
+        except ValueError as error:
+            raise ValidationError("Activation link is expired") from error
+
+        return Response(data=None, status=204)
 
 router = routers.DefaultRouter()
-router.register("", UsersAPIViewSet, basename="user")
+router.register(r"", UsersAPIViewSet, basename="user")
 
 
