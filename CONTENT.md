@@ -312,6 +312,74 @@ For case insensitive:
 rest = Restaurant.objects.get(name__icontains=restaurant_name.lower())
 
 
+## Caching
+https://docs.djangoproject.com/en/5.2/topics/cache/
+https://www.django-rest-framework.org/api-guide/caching/
+
+
+Endpoint caching
+### cache_page
+https://docs.djangoproject.com/en/dev/topics/cache/#django.views.decorators.cache.cache_page
+from django.views.decorators.cache import cache_page
+
+@cache_page(10) # cached for 10 seconds
+def dishes
+
+This will fail because @cache_page could be applied only to functions:
+
+from django.utils.decorators import method decorator
+@method_decorator(cache_page(10)) # cached for 10 seconds
+def dishes
+
+Check response time in Postman
+
+
+Django cache settings:
+https://docs.djangoproject.com/en/5.2/ref/settings/#caches
+
+### Redis
+https://redis.readthedocs.io/en/latest/
+https://redis.readthedocs.io/en/latest/commands.html#redis.commands.cluster.RedisClusterCommands.delete
+
+redis-cli  - to start CLI
+```shell
+root@c8a4bd9ab346:/data# redis-cli
+127.0.0.1:6379> set name John
+OK
+127.0.0.1:6379> get name
+"John"
+127.0.0.1:6379> get name2
+(nil)
+127.0.0.1:6379>
+```
+
+Cache should be used on idempotent methods
+Cache better use not in view but in Services that could be used by views.
+
+Sending email
+https://docs.djangoproject.com/en/5.2/topics/email/
+
+Email backends
+https://docs.djangoproject.com/en/5.2/topics/email/#topic-email-backends
+
+For user activation link, link to frontend should be specified
+
+pipenv install redis
+
+Mailhog - to test emails
+Mailpit - newer service to test emails (Web + SMTP)
+
+
+
+
+
+
+
+nixOS
+Istio
+Long Polling
+
+
 ## pipenv commands
 pipenv shell
 pipenv graph

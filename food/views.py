@@ -8,13 +8,14 @@ from rest_framework.decorators import action, permission_classes, api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, ValidationError  # always returns status_code=400
-from django.db import transaction
-from django.shortcuts import redirect
-
-from django.contrib.auth.decorators import login_required, user_passes_test
-
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.pagination import PageNumberPagination
+
+from django.db import transaction
+from django.shortcuts import redirect
+from django.views.decorators.cache import cache_page
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.utils.decorators import method_decorator
 
 from .models import Restaurant, Dish, Order, OrderItem, OrderStatus
 from .enums import DeliveryProvider
@@ -162,6 +163,7 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
                 return [permissions.IsAuthenticated()]
 
 
+    @method_decorator(cache_page(10))
     @action(methods=["get"], detail=False) # if True, primary key is expected in router
     def dishes(self, request: Request):
         """

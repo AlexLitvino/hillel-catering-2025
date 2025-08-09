@@ -29,6 +29,7 @@ class UserManager(BaseUserManager):
         email = self.normalize_email(email)
         password = make_password(password)  # hashing password
 
+        extra_fields["is_active"] = False
         extra_fields["is_staff"] = False
         extra_fields["is_superuser"] = False
         extra_fields["role"] = Role.CUSTOMER
