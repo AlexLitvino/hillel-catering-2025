@@ -118,9 +118,15 @@ class UsersAPIViewSet(viewsets.GenericViewSet):
         serializer.is_valid()
 
         email = serializer.validated_data["email"]
+        user_id = get_object_or_404(User, email=email).id
+        is_active = get_object_or_404(User, email=email).is_active
+
+        if is_active:
+            raise ValidationError("User already activated")
+
         activation_service = ActivationService(email=email)
         activation_key = activation_service.create_activation_key()
-        user_id = get_object_or_404(User, email=email).id
+
         activation_service.save_activation_information(
             user_id=user_id,
             activation_key=activation_key
