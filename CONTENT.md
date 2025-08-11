@@ -370,8 +370,40 @@ Mailhog - to test emails
 Mailpit - newer service to test emails (Web + SMTP)
 
 
+## Dockerization
+WORKDIR /app - created automatically
 
+ENV PYTHONDONTWRITEBYTECODE=1 - not create pycache directory
 
+docker build -t catering-api
+docker run --rm -p 8000:8000 catering-api
+docker run --rm -p 8000:8000 -e DJANGO_SECRET_KEY="..." catering-api
+docker run --rm -p 8000:8000 -e DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}  -e DJANGO_DEBUG=${DJANGO_DEBUG} catering-api
+
+make <STAGE>  (make build, make docker)
+
+source .env
+
+Docker secrets
+https://docs.docker.com/build/building/secrets/
+
+docker compose build
+docker compose up
+docker compose down
+docker compose logs <SERVICE_NAME>
+docker compose restart <SERVICE_NAME>
+docker compose exec <SERVICE_NAME> <COMMAND>
+
+Docker compose restart policy
+https://docs.docker.com/engine/containers/start-containers-automatically/
+
+docker compose exec api bash
+docker compose exec api python manage.py migrate
+docker compose exec database psql -U postgres 
+\l
+\c catering
+\dt
+docker compose exec api python manage.py createsuperuser
 
 
 
