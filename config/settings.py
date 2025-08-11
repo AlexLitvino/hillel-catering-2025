@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 import os
+import uuid
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -218,3 +219,5 @@ EMAIL_PORT = int(os.getenv("DJANGO_EMAIL_PORT", default="1025"))
 # TODO: doesn't work with specified credentials
 # EMAIL_HOST_USER = "mailpit"
 # EMAIL_HOST_PASSWORD = "mailpit"
+
+UUID_NAMESPACE = uuid.uuid4()

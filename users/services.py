@@ -8,14 +8,12 @@ from .models import User
 
 class ActivationService:
 
-    UUID_NAMESPACE = uuid.uuid4()
-
     def __init__(self, email: str | None = None):
         self.email: str | None = email
         self.cache: CacheService = CacheService()
 
     def create_activation_key(self):
-        # key = uuid.uuid3(self.UUID_NAMESPACE, self.email)
+        # key = uuid.uuid3(settings.UUID_NAMESPACE, self.email)
         # OR
         key = uuid.uuid4()
         return key
