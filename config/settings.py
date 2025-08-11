@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from datetime import timedelta
 from pathlib import Path
+import uuid
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -193,3 +194,22 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://my_user:my_user_password@localhost:6380/0"
+    }
+}
+
+ACTIVATION_EXPIRATION_TIME = 40
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"  # smtp.EmailBackend
+
+EMAIL_HOST = "localhost"
+EMAIL_PORT = 1025
+# TODO: doesn't work with specified credentials
+# EMAIL_HOST_USER = "mailpit"
+# EMAIL_HOST_PASSWORD = "mailpit"
+
+UUID_NAMESPACE = uuid.uuid4()
