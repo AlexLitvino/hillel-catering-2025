@@ -5,7 +5,7 @@
 # COPY - copy from host-machine to the container
 # CMD - command to execute
 
-FROM python:3.13-slim as base
+FROM python:3.13-slim
 
 
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -29,28 +29,13 @@ RUN pip install --upgrade pip setuptools pipenv
 
 # Install deps
 COPY Pipfile Pipfile.lock ./
+RUN pipenv install --system --deploy
 
 
 # Copy project files
 COPY . .
 
 
-
-
-FROM base AS dev
-
-RUN pipenv install sync --dev --system
-
 EXPOSE 8000/tcp
 ENTRYPOINT [ "python" ]
 CMD [ "manage.py", "runserver", "0.0.0.0:8000" ]
-
-
-
-FROM base AS prod
-
-RUN pipenv install install --deploy --system
-
-EXPOSE 8000/tcp
-ENTRYPOINT [ "python" ]
-CMD [ "-m", "gunicorn", "config.wsgi:application" ]

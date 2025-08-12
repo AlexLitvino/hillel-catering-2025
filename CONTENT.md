@@ -409,8 +409,11 @@ docker compose exec api python manage.py createsuperuser
 
 nixOS
 Istio
+Short polling
 Long Polling
 
+
+<fast_api_endpoint>/docs - документация
 
 ## pipenv commands
 pipenv shell
