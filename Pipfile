@@ -7,6 +7,7 @@ name = "pypi"
 django = "~=5.2.3"  # web framework
 djangorestframework = "~=3.16.0"  # REST batteries
 djangorestframework-simplejwt = "~=5.5.0"  # JWT Authentication
+psycopg2-binary = "~=2.9.10"
 redis = "~=6.2.0"  # Cache
 
 [dev-packages]
@@ -17,7 +18,10 @@ mypy="~=1.15.0"   # types checking
 ipdb="~=0.13.13"  # debugger
 django-stubs = { version = "~=5.2.1", extras=["compatible-mypy"] }
 djangorestframework-stubs = { version = "~=3.16.0", extras=["compatible-mypy"] }
-requests="~=2.32.4"  # test client
+fastapi="~=0.116.1" # web framework
+uvicorn = "~=0.35.0"
+pydantic = "~=2.11.7"
+httpx = "~=0.28.1"
 
 [requires]
 python_version = "3.13"

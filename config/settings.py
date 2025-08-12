@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from datetime import timedelta
 from pathlib import Path
+import os
 import uuid
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -22,12 +23,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-bl3wrvo*nc8(8zh%qhye3lq%bh5*3q0k9pa3l715+=m%*&+h69"
+#SECRET_KEY = "django-insecure-bl3wrvo*nc8(8zh%qhye3lq%bh5*3q0k9pa3l715+=m%*&+h69"
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+#DEBUG = True
+DEBUG = bool(os.getenv("DJANGO_DEBUG", ""))
 
-ALLOWED_HOSTS = []
+#ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -84,8 +88,12 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql", # "django.db.backends.sqlite3",
+        "NAME": os.getenv("DJANGO_DB_NAME", default="catering"), # BASE_DIR / "db.sqlite3",
+        "USER": os.getenv("DJANGO_DB_USER", default="postgres"),
+        "PASSWORD": os.getenv("DJANGO_DB_PASSWORD", default="postgres"),
+        "HOST": os.getenv("DJANGO_DB_HOST", default="database"),
+        "PORT": os.getenv("DJANGO_DB_PORT", default="5432"),
         "ATOMIC_REQUESTS": True,  # use it always, other way is to use decorator @transaction.atomic for action, OR using with transaction.atomic
     }
 }
@@ -198,16 +206,16 @@ SIMPLE_JWT = {
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://my_user:my_user_password@localhost:6380/0"
+        "LOCATION": os.getenv("DJANGO_CACHE_URL", default="redis://cache:6379/0") #"redis://my_user:my_user_password@localhost:6380/0"
     }
 }
 
 ACTIVATION_EXPIRATION_TIME = 40
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"  # smtp.EmailBackend
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend" # "django.core.mail.backends.console.EmailBackend"
 
-EMAIL_HOST = "localhost"
-EMAIL_PORT = 1025
+EMAIL_HOST = os.getenv("DJANGO_EMAIL_HOST", default="mailing") #"localhost"
+EMAIL_PORT = int(os.getenv("DJANGO_EMAIL_PORT", default="1025"))
 # TODO: doesn't work with specified credentials
 # EMAIL_HOST_USER = "mailpit"
 # EMAIL_HOST_PASSWORD = "mailpit"
