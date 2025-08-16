@@ -69,6 +69,11 @@ class OrderSerializer(serializers.Serializer):
             return value
 
 
+class KFCOrderSerializer(serializers.Serializer):
+    pass
+
+
+
 class IsAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):
@@ -325,6 +330,12 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
 
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
+
+
+    @action(methods=["post"], detail=False, url_path=r"webhooks/kfc/")
+    def kfc_webhook(self, request):
+        """Handle KFC webhook about order"""
+        data = request.data
 
 
 @login_required  #  uses Django’s session cookie (what browser sends after login)

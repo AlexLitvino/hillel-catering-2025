@@ -406,14 +406,61 @@ docker compose exec database psql -U postgres
 docker compose exec api python manage.py createsuperuser
 
 
-
 nixOS
 Istio
-Short polling
-Long Polling
 
+Multi-stage builds
+
+Application servers:
+- gunicorn
+- uvicorn
+
+FastAPI requires ASGI server (uvicorn)
+
+Pipenv supports custom commands in Pipfile
+
+uvicorn tests.providers.silpo:app --port 8001
+
+pipenv install --dev   -install dev-packages
 
 <fast_api_endpoint>/docs - документация
+
+"Serializers" like in Django Rest Framework
+- pydantic
+- marshmallow is an ORM/ODM/framework-agnostic library for converting complex datatypes, 
+such as objects, to and from native Python datatypes.
+https://marshmallow.readthedocs.io/en/latest/
+- attrs
+
+from fastapi import BackgroundTask - starting background task in FastAPI
+
+SQLAlchemy Admin - admin panel for FastAPI
+
+Awesome FastAPI - A curated list of awesome things related to FastAPI.
+https://github.com/mjhea0/awesome-fastapi
+
+testdriven.io
+
+- Short polling (Silpo) - 1 method to create resource, 2nd method periodically polling when resource changes its state
+- Long Polling
+- Webhook (KFC) - provider saves your endpoint to send notification when something changed
+
+
+
+
+Yaak - REST client (Postman analog) https://yaak.app/
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## pipenv commands
 pipenv shell
