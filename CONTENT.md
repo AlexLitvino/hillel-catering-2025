@@ -445,16 +445,86 @@ testdriven.io
 - Long Polling
 - Webhook (KFC) - provider saves your endpoint to send notification when something changed
 
+For Orders OrderManager could be specified. 
+In it we could specify that it would work with only authorized users - redefining  all()
+
+psql
+drop database catering;
+create database catering;
+
+If set empty dict, it will be distributed between all instances
+```python
+restaurants: dict = field(default_factory=dict)
+```
+
+N+1 problem
+```python
+        # get all items for this order, optimize the query
+        qs = self.items.select_related("dish__restaurant")
+
+        # N+1
+        restaurants = {item.dish.restaurant for item in qs}
+```
+
+docker compose build
+docker compose up -d database cache broker mailing silpo-mock kfc-mock uklon-mock
+docker compose logs -f
+
+
+Limit connection time to service (polling)
+
+Functions in this part could be run in separate threads
+```python
+        threads = []
+        match restaurant.name.lower():
+            case "silpo":
+                thread = Thread(targer=order_in_silpo, args=(order.pk, items), daemon=True)
+                threads.append(thread)
+                thread.start()
+                # or
+                # order_in_silpo.apply_async()
+            case "kfc":
+                order_in_kfc(order.pk, items)
+```
+
+PubSub
+Queue:
+- Redis
+- AMQP (RabbitMQ)
+- SQS (Amazon)
+
+RQ (Redis Queue) is a simple Python library for queueing jobs and processing them in the background with workers.
+https://github.com/rq/rq
+
+Job queues in python with asyncio and redis.
+https://github.com/python-arq/arq
+
+Celery
+https://docs.celeryq.dev/en/v5.5.3/getting-started/introduction.html
+
+Celery - Django integration
+https://docs.celeryq.dev/en/v5.5.3/django/first-steps-with-django.html
+
+celery -A config worker -l INFO
+By default connecting to RabbitMQ
+
+Celery serializes data by:
+- JSON
+- -Pickle
+
+
+For Windows worker should run with --pool=solo option
 
 
 
 Yaak - REST client (Postman analog) https://yaak.app/
 
+Don't place webhook on public services
+Use /webhooks/kfc/<UUID> - to make it difficult to find this endpoint
 
 
 
-
-
+tmux + tmuxinator
 
 
 

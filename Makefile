@@ -12,3 +12,9 @@ docker:
 
 clean:
 	docker image prune
+
+worker_default:
+	celery -A config worker -l INFO -Q default
+
+worker_high:
+	celery -A config worker -l INFO -Q high_priority

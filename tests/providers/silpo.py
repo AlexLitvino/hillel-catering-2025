@@ -11,7 +11,7 @@ from pydantic import BaseModel
 STORAGE: dict[str, dict] = {}
 
 
-app = FastAPI()
+app = FastAPI(title="Silpo API")
 OrderStatus = Literal["not started", "cooking", "cooked", "finished"]
 
 
@@ -46,4 +46,4 @@ async def make_order(body: OrderRequestBody, background_task: BackgroundTasks):
 
 @app.get("/api/orders/{order_id}")
 async def get_order(order_id: str):
-    return STORAGE.get(order_id, {"error": "No such order"})
+    return {"id": order_id, "status": STORAGE.get(order_id)}

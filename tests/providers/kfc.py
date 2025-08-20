@@ -13,7 +13,7 @@ STORAGE: dict[str, dict] = {}
 
 CATERING_API_WEBHOOK_URL = "http://localhost/webhooks/kfc"
 
-app = FastAPI()
+app = FastAPI(title="KFC API")
 OrderStatus = Literal["not started", "cooking", "cooked", "finished"]
 
 

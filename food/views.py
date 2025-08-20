@@ -20,6 +20,7 @@ from django.utils.decorators import method_decorator
 from .models import Restaurant, Dish, Order, OrderItem, OrderStatus
 from .enums import DeliveryProvider
 from users.models import User, Role
+from .services import schedule_order
 
 class DishSerializer(serializers.ModelSerializer):
 
@@ -228,8 +229,8 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
     # I renamed url_path for this method to create-orders as it stops working
     # ChatGPT states that we could have only one method with unique url_path and need to dispatch GET/POST inside method
     # or rename url_path
-    @transaction.atomic
-    @action(methods=["post"], detail=False, url_path=r"create-orders")
+    #@transaction.atomic
+    #@action(methods=["post"], detail=False, url_path=r"create-orders")
     def create_order(self, request: Request):
         """
         >>> HTTP Request
@@ -278,7 +279,7 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
 
         print(f"New food order is created: {order.pk}. ETA: {order.eta}")
 
-        # TODO: run scheduler
+        schedule_order(order)
 
         return Response(
         #     data={
@@ -299,7 +300,7 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
         return Response(data=serializer.data)
 
 
-    @action(methods=["get"], detail=False, url_path=r"orders")  # , name="orders_list" ???
+    #@action(methods=["get"], detail=False, url_path=r"orders")  # , name="orders_list" ???
     def all_orders(self, request):
         filters = FoodFilters(**request.query_params.dict())
 
@@ -330,6 +331,14 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
 
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
+
+
+    @action(methods=["get", "post"], detail=False, url_path=r"orders")
+    def orders(self, request: Request) -> Response:
+        if request.method == "POST":
+            return self.create_order(request)
+        else:
+            return self.all_orders(request)
 
 
     @action(methods=["post"], detail=False, url_path=r"webhooks/kfc/")

@@ -42,7 +42,9 @@ COPY . .
 
 FROM base AS dev
 
-RUN pipenv install sync --dev --system
+ENV C_FORCE_ROOT="true"
+
+RUN pipenv sync --dev --system
 
 EXPOSE 8000/tcp
 ENTRYPOINT [ "python" ]
