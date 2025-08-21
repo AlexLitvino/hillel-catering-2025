@@ -54,7 +54,7 @@ def all_orders_cooked(order_id: int):
 
     return results
 
-@celery_app.task(queue="default")
+@celery_app.task(queue="high_priority")
 def order_in_silpo(order_id: int, items: QuerySet[OrderItem]):
     """Short polling requests to the Silpo API
 
