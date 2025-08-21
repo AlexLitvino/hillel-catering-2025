@@ -18,3 +18,6 @@ worker_default:
 
 worker_high:
 	celery -A config worker -l INFO -Q high_priority
+
+worker_low:
+	celery -A config worker -l INFO -Q low_priority

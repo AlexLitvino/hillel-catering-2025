@@ -528,7 +528,59 @@ tmux + tmuxinator
 
 
 
-
+```
+[2025-08-21 09:15:58,115: INFO/MainProcess] Task users.tasks.send_user_activation_email[a837365b-fb06-4bc5-a6ef-6386244ce995] received
+[2025-08-21 09:16:00,392: ERROR/MainProcess] Task users.tasks.send_user_activation_email[a837365b-fb06-4bc5-a6ef-6386244ce995] raised unexpected: gaierror(11001, 'getaddrinfo failed')
+Traceback (most recent call last):
+  File "C:\Users\Алексей\.virtualenvs\hillel-catering-2025-CqdwkeUo\Lib\site-packages\celery\app\trace.py", line 453, in trace_task
+    R = retval = fun(*args, **kwargs)
+                 ~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Алексей\.virtualenvs\hillel-catering-2025-CqdwkeUo\Lib\site-packages\celery\app\trace.py", line 736, in __protected_call__
+    return self.run(*args, **kwargs)
+           ~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\Development\Python\hillel-catering-2025\users\tasks.py", line 12, in send_user_activation_email
+    send_mail(subject="User Activation",
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              message=f"Please activate your account: {activation_link}",
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              from_email="admin@catering.com",
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              recipient_list=[email])
+              ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Алексей\.virtualenvs\hillel-catering-2025-CqdwkeUo\Lib\site-packages\django\core\mail\__init__.py", line 92, in send_mail
+    return mail.send()
+           ~~~~~~~~~^^
+  File "C:\Users\Алексей\.virtualenvs\hillel-catering-2025-CqdwkeUo\Lib\site-packages\django\core\mail\message.py", line 307, in send
+    return self.get_connection(fail_silently).send_messages([self])
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Users\Алексей\.virtualenvs\hillel-catering-2025-CqdwkeUo\Lib\site-packages\django\core\mail\backends\smtp.py", line 128, in send_messages
+    new_conn_created = self.open()
+  File "C:\Users\Алексей\.virtualenvs\hillel-catering-2025-CqdwkeUo\Lib\site-packages\django\core\mail\backends\smtp.py", line 86, in open
+    self.connection = self.connection_class(
+                      ~~~~~~~~~~~~~~~~~~~~~^
+        self.host, self.port, **connection_params
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Python\Python313\Lib\smtplib.py", line 255, in __init__
+    (code, msg) = self.connect(host, port)
+                  ~~~~~~~~~~~~^^^^^^^^^^^^
+  File "D:\Python\Python313\Lib\smtplib.py", line 341, in connect
+    self.sock = self._get_socket(host, port, self.timeout)
+                ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Python\Python313\Lib\smtplib.py", line 312, in _get_socket
+    return socket.create_connection((host, port), timeout,
+           ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+                                    self.source_address)
+                                    ^^^^^^^^^^^^^^^^^^^^
+  File "D:\Python\Python313\Lib\socket.py", line 840, in create_connection
+    for res in getaddrinfo(host, port, 0, SOCK_STREAM):
+               ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Python\Python313\Lib\socket.py", line 977, in getaddrinfo
+    for res in _socket.getaddrinfo(host, port, family, type, proto, flags):
+               ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+socket.gaierror: [Errno 11001] getaddrinfo failed
+```
 
 
 

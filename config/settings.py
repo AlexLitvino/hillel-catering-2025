@@ -219,6 +219,8 @@ EMAIL_PORT = int(os.getenv("DJANGO_EMAIL_PORT", default="1025"))
 # TODO: doesn't work with specified credentials
 # EMAIL_HOST_USER = "mailpit"
 # EMAIL_HOST_PASSWORD = "mailpit"
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = False
 
 UUID_NAMESPACE = uuid.uuid4()
 
@@ -239,6 +241,7 @@ CELERY_EVENT_SERIALIZER = "pickle"
 CELERY_TASK_QUEUES = {
     "default": {"exchange": "default", "routing_key": "default"},
     "high_priority": {"exchange": "high_priority", "routing_key": "high_priority"},
+    "low_priority": {"exchange": "low_priority", "routing_key": "low_priority"},
 }
 
 
