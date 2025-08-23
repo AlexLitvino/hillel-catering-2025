@@ -214,13 +214,11 @@ ACTIVATION_EXPIRATION_TIME = 40
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend" # "django.core.mail.backends.console.EmailBackend"
 
-EMAIL_HOST = os.getenv("DJANGO_EMAIL_HOST", default="mailing") #"localhost"
+EMAIL_HOST = os.getenv("DJANGO_EMAIL_HOST", default="localhost") #"localhost", "mailing"
 EMAIL_PORT = int(os.getenv("DJANGO_EMAIL_PORT", default="1025"))
 # TODO: doesn't work with specified credentials
 # EMAIL_HOST_USER = "mailpit"
 # EMAIL_HOST_PASSWORD = "mailpit"
-EMAIL_USE_TLS = False
-EMAIL_USE_SSL = False
 
 UUID_NAMESPACE = uuid.uuid4()
 
