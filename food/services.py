@@ -3,6 +3,7 @@ from time import sleep
 from threading import Thread
 
 from django.db.models import QuerySet
+from django.conf import settings
 
 from shared.cache import CacheService
 from config import celery_app
@@ -35,7 +36,6 @@ class TrackingOrder:
         18: ...
     }
     """
-
     restaurants: dict = field(default_factory=dict)
     delivery: dict = field(default_factory=dict)
 
@@ -106,7 +106,7 @@ def order_in_silpo(order_id: int, items: QuerySet[OrderItem]):
                 "status": internal_status,
             }
             cache.set(
-                namespace="orders", key=str(order_id), value=asdict(tracking_order)
+                namespace="orders", key=str(order_id), value=asdict(tracking_order), ttl=settings.ORDER_COOKING_EXPIRATION_TIME
             )
         else:
             # ✨ IF ALREADY HAVE EXTERNAL ID - JUST RETRIEVE THE ORDER
@@ -121,7 +121,7 @@ def order_in_silpo(order_id: int, items: QuerySet[OrderItem]):
                 ] = internal_status
                 print(f"Silpo order status changed to {internal_status}")
                 cache.set(
-                    namespace="orders", key=str(order_id), value=asdict(tracking_order)
+                    namespace="orders", key=str(order_id), value=asdict(tracking_order), ttl=settings.ORDER_COOKING_EXPIRATION_TIME
                 )
 
             # if started cooking
@@ -159,13 +159,13 @@ def order_in_kfc(order_id: int, items):
     }
 
     print(f"Created MOCKED KFC Order. External ID: 'MOCK', Status: COOKED")
-    cache.set(namespace="orders", key=str(order_id), value=asdict(tracking_order))
+    cache.set(namespace="orders", key=str(order_id), value=asdict(tracking_order), ttl=settings.ORDER_COOKING_EXPIRATION_TIME)
 
     # TODO: Implement webhooks for KFC
 
     # 🚧 CHECK IF ALL ORDERS ARE COOKED
     if all_orders_cooked(order_id):
-        cache.set(namespace="orders", key=str(order_id), value=asdict(tracking_order))
+        cache.set(namespace="orders", key=str(order_id), value=asdict(tracking_order), ttl=settings.ORDER_COOKING_EXPIRATION_TIME)
         Order.objects.filter(id=order_id).update(status=OrderStatus.COOKED)
 
 
@@ -185,8 +185,8 @@ def schedule_order(order: Order):
             "status": OrderStatus.NOT_STARTED,
         }
 
-    # update cache insatnce only once in the end
-    cache.set(namespace="orders", key=str(order.pk), value=asdict(tracking_order))
+    # update cache instance only once in the end
+    cache.set(namespace="orders", key=str(order.pk), value=asdict(tracking_order), ttl=settings.ORDER_COOKING_EXPIRATION_TIME)
 
     # start processing after cache is complete
     # threads = []

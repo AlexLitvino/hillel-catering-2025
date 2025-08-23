@@ -14,10 +14,10 @@ clean:
 	docker image prune
 
 worker_default:
-	celery -A config worker -l INFO -Q default
+	celery -A config worker -l INFO -Q default --pool=solo
 
 worker_high:
-	celery -A config worker -l INFO -Q high_priority
+	celery -A config worker -l INFO -Q high_priority --pool=solo
 
 worker_low:
-	celery -A config worker -l INFO -Q low_priority
+	celery -A config worker -l INFO -Q low_priority --pool=solo
