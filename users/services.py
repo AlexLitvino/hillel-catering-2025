@@ -3,6 +3,7 @@ import uuid
 from django.core.mail import send_mail
 from django.conf import settings
 
+from config import celery_app
 from shared.cache import CacheService
 from .models import User
 
@@ -35,8 +36,10 @@ class ActivationService:
         self.cache.set(namespace="activation", key=str(activation_key), value=payload, ttl=settings.ACTIVATION_EXPIRATION_TIME)
         return None
 
-    def send_user_activation_email(self, activation_key: str):
-        if self.email is None:
+    @staticmethod
+    @celery_app.task(queue="low_priority")
+    def send_user_activation_email(email, activation_key: str):
+        if email is None:
             raise ValueError("No email specified for user activation process")
 
         # SMTP Client Send Email Request
@@ -44,7 +47,7 @@ class ActivationService:
         send_mail(subject="User Activation",
                   message=f"Please activate your account: {activation_link}",
                   from_email="admin@catering.com",
-                  recipient_list=[self.email])
+                  recipient_list=[email])
 
     def activate_user(self, activation_key: str) -> None:
         user_cache_payload: dict | None = self.cache.get(namespace="activation", key=activation_key)
@@ -57,3 +60,4 @@ class ActivationService:
         user.save()
         # OR User.objects.filter(id=user...).update(is_active=True)
         self.cache.delete(namespace="activation", key=activation_key)
+

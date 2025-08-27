@@ -23,7 +23,7 @@ class CacheService:
 
     def __init__(self):
         self.connection: redis.Redis =  redis.Redis.from_url(
-            "redis://localhost:6380/0"
+            "redis://localhost:6379/0"
         )
 
     @staticmethod

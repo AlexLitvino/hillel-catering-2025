@@ -211,13 +211,38 @@ CACHES = {
 }
 
 ACTIVATION_EXPIRATION_TIME = 40
+ORDER_COOKING_EXPIRATION_TIME = 40  # TODO: TrackingOrder cache record could be removed from cache directly after delivering order (not implemented yet)
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend" # "django.core.mail.backends.console.EmailBackend"
 
-EMAIL_HOST = os.getenv("DJANGO_EMAIL_HOST", default="mailing") #"localhost"
+EMAIL_HOST = os.getenv("DJANGO_EMAIL_HOST", default="localhost") #"localhost", "mailing"
 EMAIL_PORT = int(os.getenv("DJANGO_EMAIL_PORT", default="1025"))
 # TODO: doesn't work with specified credentials
 # EMAIL_HOST_USER = "mailpit"
 # EMAIL_HOST_PASSWORD = "mailpit"
 
 UUID_NAMESPACE = uuid.uuid4()
+
+# ==============================
+# CELERY SECTION
+# ==============================
+# CELERY_ACCEPT_CONTENT
+# Prefix CELERY_ is namespace from celery.py app.config_from_object("django.conf:settings", namespace="CELERY")
+
+# CELERY_BROKER_URL = os.getenv("DJANGO_BROKER_URL", default="redis://broker:6379/0")
+# CELERY_BROKER_URL = os.getenv("DJANGO_BROKER_URL", default="redis://localhost:6380/0")
+CELERY_BROKER_URL = os.getenv("DJANGO_BROKER_URL", default="amqp://localhost:5672//")
+CELERY_ACCEPT_CONTENT = [
+    "pickle",
+    "application/json",
+]
+CELERY_TASK_SERIALIZER = "pickle"
+CELERY_EVENT_SERIALIZER = "pickle"
+
+CELERY_TASK_QUEUES = {
+    "default": {"exchange": "default", "routing_key": "default"},
+    "high_priority": {"exchange": "high_priority", "routing_key": "high_priority"},
+    "low_priority": {"exchange": "low_priority", "routing_key": "low_priority"},
+}
+
+CELERY_TASK_ALWAYS_EAGER = bool(os.getenv("CELERY_TASK_ALWAYS_EAGER", default=""))

@@ -83,18 +83,20 @@ class UsersAPIViewSet(viewsets.GenericViewSet):
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()  # can't be saved before validation (serializer.is_valid())
 
+        email = serializer.instance.email
         #Activation process
         activation_service = ActivationService(
             email=serializer.instance.email
             # email = getattr(serializer.instance, "email")
         )
         activation_key = activation_service.create_activation_key()
+
         activation_service.save_activation_information(
             user_id=serializer.instance.id,
             activation_key=activation_key
         )
 
-        activation_service.send_user_activation_email(activation_key=activation_key)
+        ActivationService.send_user_activation_email.delay(email, activation_key=activation_key)
 
         return Response(UserSerializer(serializer.instance).data, status=201)
 
@@ -132,7 +134,7 @@ class UsersAPIViewSet(viewsets.GenericViewSet):
             activation_key=activation_key
         )
 
-        activation_service.send_user_activation_email(activation_key=activation_key)
+        ActivationService.send_user_activation_email.delay(email, activation_key=activation_key)
 
         return Response(data=None, status=204)
 

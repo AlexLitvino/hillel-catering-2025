@@ -8,7 +8,8 @@ django = "~=5.2.3"  # web framework
 djangorestframework = "~=3.16.0"  # REST batteries
 djangorestframework-simplejwt = "~=5.5.0"  # JWT Authentication
 psycopg2-binary = "~=2.9.10"
-redis = "~=6.2.0"  # Cache
+redis = "~=5.0.0"  # Cache; changed from 6.2.0 to 5.0.0 because conflict with Celery
+celery = { version = "==5.4.0", extras = ["redis", "librabbitmq"] } # Worker
 
 [dev-packages]
 flake8="~=7.3.0"  # code quality
@@ -22,6 +23,8 @@ fastapi="~=0.116.1" # web framework
 uvicorn = "~=0.35.0"
 pydantic = "~=2.11.7"
 httpx = "~=0.28.1"
+celery-types = "~=0.23.0"
+watchdog = "~=6.0.0"
 
 [requires]
 python_version = "3.13"
