@@ -1,6 +1,8 @@
 import csv
 import io
 from datetime import date
+import json
+from dataclasses import asdict
 from typing import Any
 
 from rest_framework import  viewsets, serializers, routers, permissions
@@ -12,15 +14,18 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.pagination import PageNumberPagination
 
 from django.db import transaction
+from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.views.decorators.cache import cache_page
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.decorators import method_decorator
 
+from shared.cache import CacheService
 from .models import Restaurant, Dish, Order, OrderItem, OrderStatus
 from .enums import DeliveryProvider
 from users.models import User, Role
-from .services import schedule_order
+from .services import TrackingOrder, all_orders_cooked, schedule_order
 
 class DishSerializer(serializers.ModelSerializer):
 
@@ -341,12 +346,6 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
             return self.all_orders(request)
 
 
-    @action(methods=["post"], detail=False, url_path=r"webhooks/kfc/")
-    def kfc_webhook(self, request):
-        """Handle KFC webhook about order"""
-        data = request.data
-
-
 @login_required  #  uses Django’s session cookie (what browser sends after login)
 def import_dishes(request):
     if request.method != "POST":
@@ -378,6 +377,34 @@ def import_dishes(request):
     print(f"{total} dishes uploaded to the database")
 
     return redirect(request.META.get("HTTP_REFERER", "/"))
+
+
+@csrf_exempt
+def kfc_webhook(request):
+    """Process KFC Order webhooks."""
+
+    print("KFC Webhook is Handled")
+    #breakpoint()
+    data: dict = json.loads(json.dumps(request.POST))
+
+    cache = CacheService()
+    restaurant = Restaurant.objects.get(name="KFC")
+    kfc_cache_order = cache.get("kfc_orders", key=data["id"])
+
+    # get internal order from the mapping
+    # add logging if order wasn't found
+
+    order: Order = Order.objects.get(id=kfc_cache_order["internal_order_id"])
+    tracking_order = TrackingOrder(**cache.get(namespace="orders", key=str(order.pk)))
+    tracking_order.restaurants[str(restaurant.pk)] |= {
+        "external_id": data["id"],
+        "status": OrderStatus.COOKED,
+    }
+
+    cache.set(namespace="orders", key=str(order.pk), value=asdict(tracking_order))
+    all_orders_cooked(order.pk)
+
+    return JsonResponse({"message": "ok"})
 
 
 router = routers.DefaultRouter()

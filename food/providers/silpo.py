@@ -5,7 +5,7 @@ import httpx
 
 
 class OrderStatus(enum.StrEnum):
-    NOT_STARTED = "not_started"
+    NOT_STARTED = "not started"
     COOKING = "cooking"
     COOKED = "cooked"
     FINISHED = "finished"

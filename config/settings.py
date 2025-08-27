@@ -211,7 +211,7 @@ CACHES = {
 }
 
 ACTIVATION_EXPIRATION_TIME = 40
-ORDER_COOKING_EXPIRATION_TIME = 40  # TODO: TrackingOrder cache record could be removed from cache directly after delivering order (not implemented yet)
+ORDER_COOKING_EXPIRATION_TIME = 400  # TODO: TrackingOrder cache record could be removed from cache directly after delivering order (not implemented yet)
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend" # "django.core.mail.backends.console.EmailBackend"
 
@@ -245,4 +245,4 @@ CELERY_TASK_QUEUES = {
     "low_priority": {"exchange": "low_priority", "routing_key": "low_priority"},
 }
 
-CELERY_TASK_ALWAYS_EAGER = bool(os.getenv("CELERY_TASK_ALWAYS_EAGER", default=""))
+CELERY_TASK_ALWAYS_EAGER = bool(os.getenv("CELERY_TASK_ALWAYS_EAGER", default="1"))

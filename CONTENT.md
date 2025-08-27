@@ -522,6 +522,12 @@ Yaak - REST client (Postman analog) https://yaak.app/
 Don't place webhook on public services
 Use /webhooks/kfc/<UUID> - to make it difficult to find this endpoint
 
+To track OS changes
+https://github.com/gorakhargosh/watchdog
+
+ENV C_FORCE_ROOT="true" - to run Celery inside container
+
+CELERY_TASK_ALWAYS_EAGER = bool(os.getenv("CELERY_TASK_ALWAYS_EAGER", default=""))
 
 
 tmux + tmuxinator
