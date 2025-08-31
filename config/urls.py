@@ -23,7 +23,7 @@ from rest_framework_simplejwt.views import (
 )
 from users.views import router as users_router
 from food.views import router as food_router
-from food.views import import_dishes, kfc_webhook
+from food.views import import_dishes, kfc_webhook, uber_webhook
 
 urlpatterns = [
     path("admin/food/dish/import-dishes/", import_dishes, name="import_dishes"),  # should be on the first place
@@ -35,5 +35,9 @@ urlpatterns = [
         "webhooks/kfc/5834eb6c-63b9-4018-b6d3-04e170278ec2/",
         kfc_webhook,
         #name="kfc_webhook"
+    ),
+    path(
+        "webhooks/uber/de496ba9-faf3-4d31-b1c9-1212490fa248/",
+        uber_webhook,
     ),
 ]

@@ -5,7 +5,7 @@ RESTAURANT: {
 """
 
 from .enums import OrderStatus
-from .providers import silpo, kfc
+from .providers import silpo, kfc, uber
 
 RESTAURANT_EXTERNAL_TO_INTERNAL: dict[str, dict[str, OrderStatus]] = {
     "silpo": {
@@ -19,5 +19,18 @@ RESTAURANT_EXTERNAL_TO_INTERNAL: dict[str, dict[str, OrderStatus]] = {
         kfc.OrderStatus.COOKING: OrderStatus.COOKING,
         kfc.OrderStatus.COOKED: OrderStatus.COOKED,
         kfc.OrderStatus.FINISHED: OrderStatus.COOKED,
+    },
+}
+
+DELIVERY_EXTERNAL_TO_INTERNAL: dict[str, dict[str, OrderStatus]] = {
+    "uber": {
+        uber.OrderStatus.NOT_STARTED: OrderStatus.DELIVERY_LOOKUP,
+        uber.OrderStatus.DELIVERY: OrderStatus.DELIVERY,
+        uber.OrderStatus.DELIVERED: OrderStatus.DELIVERED,
+    },
+    "uklon": {
+        uber.OrderStatus.NOT_STARTED: OrderStatus.DELIVERY_LOOKUP,
+        uber.OrderStatus.DELIVERY: OrderStatus.DELIVERY,
+        uber.OrderStatus.DELIVERED: OrderStatus.DELIVERED,
     },
 }

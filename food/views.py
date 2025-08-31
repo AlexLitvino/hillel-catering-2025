@@ -25,7 +25,7 @@ from shared.cache import CacheService
 from .models import Restaurant, Dish, Order, OrderItem, OrderStatus
 from .enums import DeliveryProvider
 from users.models import User, Role
-from .services import TrackingOrder, all_orders_cooked, schedule_order
+from .services import TrackingOrder, all_orders_cooked, schedule_order, schedule_delivery
 
 class DishSerializer(serializers.ModelSerializer):
 
@@ -267,7 +267,7 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
         order = Order.objects.create(
             status=OrderStatus.NOT_STARTED,
             user=user,
-            delivery_provider="uklon",
+            delivery_provider=request.data["delivery_provider"],
             eta=serializer.validated_data["eta"],
             total=serializer.calculated_total
         )
@@ -384,7 +384,6 @@ def kfc_webhook(request):
     """Process KFC Order webhooks."""
 
     print("KFC Webhook is Handled")
-    #breakpoint()
     data: dict = json.loads(json.dumps(request.POST))
 
     cache = CacheService()
@@ -403,6 +402,32 @@ def kfc_webhook(request):
 
     cache.set(namespace="orders", key=str(order.pk), value=asdict(tracking_order))
     all_orders_cooked(order.pk)
+
+    return JsonResponse({"message": "ok"})
+
+
+@csrf_exempt
+def uber_webhook(request):
+    """Process Uber Delivery webhooks."""
+    print("Uber Webhook is Handled")
+
+    body = request.POST
+    # request.POST returns QueryDict object with all values as lists. To get values need to use get or getlist methods
+    data = {'id': body.get('id'), 'status': body.get('status'), 'location': body.getlist('location')}
+
+    # update TrackingOrder with new Status and Location
+    cache = CacheService()
+    order_id = cache.get("uber_delivery", key=data["id"])["internal_order_id"]
+
+    order: Order = Order.objects.filter(id=order_id)
+    order.update(status=data['status'])
+
+    tracking_order = TrackingOrder(**cache.get(namespace="orders", key=str(order.first().pk)))
+    tracking_order.delivery |= {
+        "status": data['status'],
+        "location": data["location"]
+    }
+    cache.set(namespace="orders", key=str(order.first().pk), value=asdict(tracking_order))
 
     return JsonResponse({"message": "ok"})
 

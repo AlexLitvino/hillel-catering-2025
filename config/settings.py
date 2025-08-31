@@ -245,4 +245,4 @@ CELERY_TASK_QUEUES = {
     "low_priority": {"exchange": "low_priority", "routing_key": "low_priority"},
 }
 
-CELERY_TASK_ALWAYS_EAGER = bool(os.getenv("CELERY_TASK_ALWAYS_EAGER", default="1"))
+CELERY_TASK_ALWAYS_EAGER = bool(os.getenv("CELERY_TASK_ALWAYS_EAGER", default=""))

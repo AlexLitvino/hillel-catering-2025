@@ -1,3 +1,4 @@
+import asyncio
 import random
 import time
 import uuid
@@ -27,7 +28,7 @@ class OrderRequestBody(BaseModel):
 async def update_order_status(order_id: str):
     ORDER_STATUSES: tuple[OrderStatus, ...] = ("cooking", "cooked", "finished")
     for status in ORDER_STATUSES:
-        time.sleep(random.randint(4, 6))
+        await asyncio.sleep(random.randint(4, 6))
         STORAGE[order_id] = status
         print(f"KFC: [{order_id}] --> {status}")
 
