@@ -1,4 +1,5 @@
 import asyncio
+import os
 import random
 import uuid
 
@@ -9,7 +10,7 @@ from pydantic import BaseModel, Field
 
 ORDER_STATUSES = ("not started", "delivery", "delivered")
 STORAGE: dict[str, dict] = {}
-CATERING_API_WEBHOOK_URL = "http://localhost:8000/webhooks/uber/de496ba9-faf3-4d31-b1c9-1212490fa248/"  # TODO: change host to api
+CATERING_API_WEBHOOK_URL = f"http://{os.getenv("API_HOST", default="localhost")}:8000/webhooks/uber/de496ba9-faf3-4d31-b1c9-1212490fa248/"
 
 
 app = FastAPI()
