@@ -533,6 +533,17 @@ CELERY_TASK_ALWAYS_EAGER = bool(os.getenv("CELERY_TASK_ALWAYS_EAGER", default=""
 tmux + tmuxinator
 
 
+Gunicorn:
+- Install
+- Configure
+- Run
+ 
+pipenv install gunicorn==23.0.0
+gunicorn config.wsgi:application -b localhost:8010   - can't be run on Windows
+
+Configs: threads, workers, max-requests, max time per request
+
+
 ## pipenv commands
 pipenv shell
 pipenv graph
