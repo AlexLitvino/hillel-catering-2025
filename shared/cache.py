@@ -6,6 +6,8 @@
 from typing import Any
 from dataclasses import asdict, dataclass
 import json
+import os
+
 
 import redis
 
@@ -23,7 +25,7 @@ class CacheService:
 
     def __init__(self):
         self.connection: redis.Redis =  redis.Redis.from_url(
-            "redis://localhost:6379/0"
+            os.getenv("DJANGO_CACHE_URL", default="redis://cache:6379/0")
         )
 
     @staticmethod

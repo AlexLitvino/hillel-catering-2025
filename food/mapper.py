@@ -5,17 +5,32 @@ RESTAURANT: {
 """
 
 from .enums import OrderStatus
-from .providers import silpo, kfc
+from .providers import silpo, kfc, uber
 
 RESTAURANT_EXTERNAL_TO_INTERNAL: dict[str, dict[str, OrderStatus]] = {
     "silpo": {
         silpo.OrderStatus.NOT_STARTED: OrderStatus.NOT_STARTED,
         silpo.OrderStatus.COOKING: OrderStatus.COOKING,
         silpo.OrderStatus.COOKED: OrderStatus.COOKED,
+        silpo.OrderStatus.FINISHED: OrderStatus.COOKED,  # sometimes order could go to external status "finished" that should be mapped to internal "cooked"
     },
     "kfc": {
         kfc.OrderStatus.NOT_STARTED: OrderStatus.NOT_STARTED,
         kfc.OrderStatus.COOKING: OrderStatus.COOKING,
         kfc.OrderStatus.COOKED: OrderStatus.COOKED,
+        kfc.OrderStatus.FINISHED: OrderStatus.COOKED,
+    },
+}
+
+DELIVERY_EXTERNAL_TO_INTERNAL: dict[str, dict[str, OrderStatus]] = {
+    "uber": {
+        uber.OrderStatus.NOT_STARTED: OrderStatus.DELIVERY_LOOKUP,
+        uber.OrderStatus.DELIVERY: OrderStatus.DELIVERY,
+        uber.OrderStatus.DELIVERED: OrderStatus.DELIVERED,
+    },
+    "uklon": {
+        uber.OrderStatus.NOT_STARTED: OrderStatus.DELIVERY_LOOKUP,
+        uber.OrderStatus.DELIVERY: OrderStatus.DELIVERY,
+        uber.OrderStatus.DELIVERED: OrderStatus.DELIVERED,
     },
 }

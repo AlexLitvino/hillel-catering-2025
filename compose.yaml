@@ -1,6 +1,9 @@
 services:
-  api:
-    build: .
+  api: &api
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
     # entrypoint: ..
     # command: ..
     ports:
@@ -11,6 +14,30 @@ services:
       - database
       - cache
       - mailing
+  worker-default:
+    <<: *api
+    container_name: catering-worker-default
+    entrypoint: bash
+    command: -c "watchmedo auto-restart --recursive --pattern='*.py' -- celery -A config worker -l INFO -Q default"
+    ports: []
+    depends_on:
+      - broker
+  worker-high-priority:
+    <<: *api
+    container_name: catering-worker-high-priority
+    entrypoint: bash
+    command: -c "watchmedo auto-restart --recursive --pattern='*.py' -- celery -A config worker -l INFO -Q high_priority"
+    ports: []
+    depends_on:
+      - broker
+  worker-low-priority:
+    <<: *api
+    container_name: catering-worker-low-priority
+    entrypoint: bash
+    command: -c "watchmedo auto-restart --recursive --pattern='*.py' -- celery -A config worker -l INFO -Q low_priority"
+    ports: []
+    depends_on:
+      - broker
   database:
     image: postgres:17
     env_file:
@@ -21,20 +48,28 @@ services:
       - pgdata:/var/lib/postgresql/data
   cache:
     image: redis:7
+    env_file:
+      - .env
     ports:
       - "6379:6379"
 #  broker:
 #    image: redis:7
+#    env_file:
+#      - .env
 #    ports:
 #      - "6380:6379"
   broker:
     image: rabbitmq:3.13-management
+    env_file:
+      - .env
     ports:
       - "5672:5672" # AMQP
       - "15672:15672" # Management UI port
 
   mailing:
     image: axllent/mailpit:latest
+    env_file:
+      - .env
     ports:
       - "1025:1025" # smtp
       - "8025:8025" # http
@@ -45,6 +80,8 @@ services:
       dockerfile: Dockerfile.test
       target: silpo
     container_name: catering-silpo-mock
+    env_file:
+      - .env
     ports:
       - "8001:8000"
   kfc-mock:
@@ -53,6 +90,8 @@ services:
       dockerfile: Dockerfile.test
       target: kfc
     container_name: catering-kfc-mock
+    env_file:
+      - .env
     ports:
       - "8002:8000"
   uklon-mock:
@@ -61,8 +100,19 @@ services:
       dockerfile: Dockerfile.test
       target: uklon
     container_name: catering-uklon-mock
+    env_file:
+      - .env
     ports:
       - "8003:8000"
-
+  uber-mock:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      target: uber
+    container_name: catering-uber-mock
+    env_file:
+      - .env
+    ports:
+      - "8004:8000"
 volumes:
   pgdata:

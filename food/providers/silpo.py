@@ -1,11 +1,12 @@
 import enum
 from dataclasses import dataclass, asdict
+import os
 
 import httpx
 
 
 class OrderStatus(enum.StrEnum):
-    NOT_STARTED = "not_started"
+    NOT_STARTED = "not started"
     COOKING = "cooking"
     COOKED = "cooked"
     FINISHED = "finished"
@@ -30,7 +31,7 @@ class OrderResponse:
 
 class Client:
     # the url of running service
-    BASE_URL = "http://localhost:8001/api/orders"
+    BASE_URL = f"http://{os.getenv("SILPO_HOST", default="localhost")}:8001/api/orders"
 
     @classmethod
     def create_order(cls, order: OrderRequestBody):

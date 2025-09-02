@@ -36,12 +36,12 @@ async def make_order(body: OrderRequestBody, background_task: BackgroundTasks):
     print(body)
 
     order_id = str(uuid.uuid4())
-    STORAGE[order_id] = "not_started"
+    STORAGE[order_id] = "not started"
     background_task.add_task(update_order_status, order_id)
 
     return {
         "id": order_id,
-        "status": "not_started"
+        "status": "not started"
     }
 
 @app.get("/api/orders/{order_id}")

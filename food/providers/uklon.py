@@ -1,5 +1,5 @@
 import enum
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 import os
 
 import httpx
@@ -7,31 +7,28 @@ import httpx
 
 class OrderStatus(enum.StrEnum):
     NOT_STARTED = "not started"
-    COOKING = "cooking"
-    COOKED = "cooked"
-    FINISHED = "finished"
-
-
-@dataclass
-class OrderItem:
-    dish: str
-    quantity: str
+    DELIVERY = "delivery"
+    DELIVERED = "delivered"
 
 
 @dataclass
 class OrderRequestBody:
-    order: list[OrderItem]
+    addresses: list[str]
+    comments: list[str]
 
 
 @dataclass
 class OrderResponse:
     id: str
     status: OrderStatus
+    location: tuple[float, float]
+    addresses: list[str]
+    comments: list[str]
 
 
 class Client:
     # the url of running service
-    BASE_URL = f"http://{os.getenv("KFC_HOST", default="localhost")}:8002/api/orders"
+    BASE_URL = f"http://{os.getenv("UKLON_HOST", default="localhost")}:8003/drivers/orders"
 
     @classmethod
     def create_order(cls, order: OrderRequestBody):

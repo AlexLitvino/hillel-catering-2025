@@ -1,5 +1,3 @@
-import time
-from typing import Literal
 import asyncio
 import random
 import uuid
@@ -8,11 +6,11 @@ from fastapi import FastAPI, BackgroundTasks
 from pydantic import BaseModel, Field
 
 
+ORDER_STATUSES = ("not started", "delivery", "delivered")
 STORAGE: dict[str, dict] = {}
 
-
 app = FastAPI()
-ORDER_STATUSES = ("not started", "delivery", "delivered")
+
 
 class OrderRequestBody(BaseModel):
     addresses: list[str] = Field(min_length=1)
@@ -22,7 +20,7 @@ class OrderRequestBody(BaseModel):
 async def delivery(order_id: str):
     for _ in range(5):
         STORAGE[order_id]["location"] = (random.random(), random.random())
-        await asyncio.sleep(1)
+        #await asyncio.sleep(1)
 
     for address in STORAGE[order_id]["addresses"]:
         await asyncio.sleep(1)
@@ -34,8 +32,6 @@ async def delivery(order_id: str):
 
 
 async def update_order_status(order_id):
-    start_location = (random.random(), random.random())
-
     for status in ORDER_STATUSES[1:]:
         STORAGE[order_id]["location"] = (random.random(), random.random())
         await asyncio.sleep(random.randint(1, 2))
@@ -48,7 +44,7 @@ async def update_order_status(order_id):
 
 
 @app.post("/drivers/orders")
-async def make_order(body: OrderRequestBody, background_task: BackgroundTasks):
+async def make_order(body: OrderRequestBody, background_tasks: BackgroundTasks):
     print(body)
 
     order_id = str(uuid.uuid4())
@@ -59,7 +55,7 @@ async def make_order(body: OrderRequestBody, background_task: BackgroundTasks):
         "comments": body.comments,
         "location": (random.random(), random.random())
     }
-    background_task.add_task(update_order_status, order_id)
+    background_tasks.add_task(update_order_status, order_id)
 
     return STORAGE.get(order_id, {"error": "No such order"})
 
