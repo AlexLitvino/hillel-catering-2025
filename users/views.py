@@ -20,17 +20,10 @@ class UserSerializer(serializers.ModelSerializer):
     # these fields should be included to fields attribute
     password = serializers.CharField(write_only=True)
     role = serializers.CharField(read_only=True)
+
     class Meta:
         model = User
-        fields = [
-            "id",
-            "email",
-            "phone_number",
-            "first_name",
-            "last_name",
-            "password",
-            "role"
-        ]
+        fields = ["id", "email", "phone_number", "first_name", "last_name", "password", "role"]
 
     def validate(self, attrs: dict[str, Any]):
         """Change password to its hash to make Token-based authentication available"""
@@ -39,19 +32,22 @@ class UserSerializer(serializers.ModelSerializer):
 
         return super().validate(attrs=attrs)
 
+
 class UserActivationSerializer(serializers.Serializer):
     key = serializers.UUIDField()
+
 
 class UserResendActivationSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
+
 class UsersAPIViewSet(viewsets.GenericViewSet):
 
     authentication_classes = [JWTAuthentication]
-    #permission_classes = [permissions.AllowAny]  # was IsAuthenticate but user creation should be allowed without auth
+    # permission_classes = [permissions.AllowAny]  # was IsAuthenticate but user creation should be allowed without auth
 
     def get_permissions(self):
-        #return super().get_permissisons()
+        # return super().get_permissisons()
         if self.action == "create":
             return [permissions.AllowAny()]
         elif self.action == "activate" or self.action == "resend_activation":
@@ -73,7 +69,6 @@ class UsersAPIViewSet(viewsets.GenericViewSet):
         # use this:
         return Response(UserSerializer(request.user).data, status=200)
 
-
     @transaction.atomic
     def create(self, request: Request):
         # to validate data
@@ -84,17 +79,14 @@ class UsersAPIViewSet(viewsets.GenericViewSet):
         instance = serializer.save()  # can't be saved before validation (serializer.is_valid())
 
         email = serializer.instance.email
-        #Activation process
+        # Activation process
         activation_service = ActivationService(
             email=serializer.instance.email
             # email = getattr(serializer.instance, "email")
         )
         activation_key = activation_service.create_activation_key()
 
-        activation_service.save_activation_information(
-            user_id=serializer.instance.id,
-            activation_key=activation_key
-        )
+        activation_service.save_activation_information(user_id=serializer.instance.id, activation_key=activation_key)
 
         ActivationService.send_user_activation_email.delay(email, activation_key=activation_key)
 
@@ -129,14 +121,12 @@ class UsersAPIViewSet(viewsets.GenericViewSet):
         activation_service = ActivationService(email=email)
         activation_key = activation_service.create_activation_key()
 
-        activation_service.save_activation_information(
-            user_id=user_id,
-            activation_key=activation_key
-        )
+        activation_service.save_activation_information(user_id=user_id, activation_key=activation_key)
 
         ActivationService.send_user_activation_email.delay(email, activation_key=activation_key)
 
         return Response(data=None, status=204)
+
 
 router = routers.DefaultRouter()
 router.register(r"", UsersAPIViewSet, basename="user")

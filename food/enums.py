@@ -33,6 +33,7 @@ class OrderStatus(enum.StrEnum):
 
         return results
 
+
 class DeliveryProvider(enum.StrEnum):
     UKLON = enum.auto()
     UBER = enum.auto()

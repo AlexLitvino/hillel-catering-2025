@@ -19,7 +19,7 @@ class OrderRequestBody(BaseModel):
 async def delivery(order_id: str):
     for _ in range(5):
         STORAGE[order_id]["location"] = (random.random(), random.random())
-        #await asyncio.sleep(1)
+        # await asyncio.sleep(1)
 
     for address in STORAGE[order_id]["addresses"]:
         await asyncio.sleep(1)
@@ -52,11 +52,12 @@ async def make_order(body: OrderRequestBody, background_tasks: BackgroundTasks):
         "status": "not started",
         "addresses": body.addresses,
         "comments": body.comments,
-        "location": (random.random(), random.random())
+        "location": (random.random(), random.random()),
     }
     background_tasks.add_task(update_order_status, order_id)
 
     return STORAGE.get(order_id, {"error": "No such order"})
+
 
 @app.get("/drivers/orders/{order_id}")
 async def get_order(order_id: str):

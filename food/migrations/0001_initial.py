@@ -122,9 +122,7 @@ class Migration(migrations.Migration):
                 ("quantity", models.SmallIntegerField()),
                 (
                     "dish",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to="food.dish"
-                    ),
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="food.dish"),
                 ),
                 (
                     "order",

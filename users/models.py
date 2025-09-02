@@ -24,7 +24,7 @@ class Role(StrEnum):
 
 class UserManager(BaseUserManager):
 
-    def create_user(self, email: str, password:str, **extra_fields):
+    def create_user(self, email: str, password: str, **extra_fields):
         """Create and save USER with passed parameters"""
         email = self.normalize_email(email)
         password = make_password(password)  # hashing password
@@ -39,8 +39,7 @@ class UserManager(BaseUserManager):
 
         return user
 
-
-    def create_superuser(self, email: str, password:str, **extra_fields):
+    def create_superuser(self, email: str, password: str, **extra_fields):
         """Create and save SUPERUSER with passed parameters"""
         email = self.normalize_email(email)
         password = make_password(password)  # hashing password
