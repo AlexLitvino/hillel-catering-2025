@@ -76,7 +76,7 @@ class UsersAPIViewSet(viewsets.GenericViewSet):
         # if not serializer.is_valid():  # generates error in case of any error during serialization
         #     return Response()  # with errors
         serializer.is_valid(raise_exception=True)
-        instance = serializer.save()  # can't be saved before validation (serializer.is_valid())
+        serializer.save()  # can't be saved before validation (serializer.is_valid()), it returns instance
 
         email = serializer.instance.email
         # Activation process

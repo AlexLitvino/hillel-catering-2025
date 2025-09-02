@@ -1,6 +1,4 @@
-import random
 from dataclasses import asdict, dataclass, field
-from threading import Thread
 from time import sleep
 
 from django.conf import settings

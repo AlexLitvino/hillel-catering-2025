@@ -5,17 +5,17 @@ from dataclasses import asdict
 from datetime import date
 from typing import Any
 
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.db import transaction
+from django.contrib.auth.decorators import login_required  # , user_passes_test
+# from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import permissions, routers, serializers, viewsets
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import action  # , api_view , permission_classes
 from rest_framework.exceptions import PermissionDenied, ValidationError  # always returns status_code=400
-from rest_framework.pagination import LimitOffsetPagination, PageNumberPagination
+from rest_framework.pagination import LimitOffsetPagination  # , PageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -24,7 +24,7 @@ from users.models import Role, User
 
 from .enums import DeliveryProvider
 from .models import Dish, Order, OrderItem, OrderStatus, Restaurant
-from .services import TrackingOrder, all_orders_cooked, schedule_delivery, schedule_order
+from .services import TrackingOrder, all_orders_cooked, schedule_order
 
 
 class DishSerializer(serializers.ModelSerializer):
@@ -82,7 +82,7 @@ class KFCOrderSerializer(serializers.Serializer):
 class IsAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):
-        assert type(request.user) == User
+        assert isinstance(request.user, User)
         user: User = request.user
 
         if user.role == Role.ADMIN:
@@ -122,7 +122,7 @@ class BaseFilters:
 
             try:
                 extractor = getattr(self, f"extract_{_key}")
-            except AttributeError as error:
+            except AttributeError:
                 errors["queryParams"][
                     key
                 ] = f"You forgot to define `extract_{_key}` method in  your {self.__class__.__name__} class"
@@ -341,7 +341,7 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
             return self.all_orders(request)
 
 
-@login_required  #  uses Django’s session cookie (what browser sends after login)
+@login_required  # uses Django’s session cookie (what browser sends after login)
 def import_dishes(request):
     if request.method != "POST":
         raise ValueError(f"Method {request.method} is not allowed on this resource")

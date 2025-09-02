@@ -6,8 +6,7 @@ delete(key: str)
 
 import json
 import os
-from dataclasses import asdict, dataclass
-from typing import Any
+from dataclasses import dataclass  # , asdict
 
 import redis
 

@@ -12,7 +12,8 @@ RESTAURANT_EXTERNAL_TO_INTERNAL: dict[str, dict[str, OrderStatus]] = {
         silpo.OrderStatus.NOT_STARTED: OrderStatus.NOT_STARTED,
         silpo.OrderStatus.COOKING: OrderStatus.COOKING,
         silpo.OrderStatus.COOKED: OrderStatus.COOKED,
-        silpo.OrderStatus.FINISHED: OrderStatus.COOKED,  # sometimes order could go to external status "finished" that should be mapped to internal "cooked"
+        # sometimes order could go to external status "finished" that should be mapped to internal "cooked"
+        silpo.OrderStatus.FINISHED: OrderStatus.COOKED,
     },
     "kfc": {
         kfc.OrderStatus.NOT_STARTED: OrderStatus.NOT_STARTED,

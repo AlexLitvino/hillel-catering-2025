@@ -92,7 +92,8 @@ DATABASES = {
         "PASSWORD": os.getenv("DJANGO_DB_PASSWORD", default="postgres"),
         "HOST": os.getenv("DJANGO_DB_HOST", default="database"),
         "PORT": os.getenv("DJANGO_DB_PORT", default="5432"),
-        "ATOMIC_REQUESTS": True,  # use it always, other way is to use decorator @transaction.atomic for action, OR using with transaction.atomic
+        "ATOMIC_REQUESTS": True,  # use it always, other way is to use decorator @transaction.atomic for action,
+        # OR using with transaction.atomic
     }
 }
 
@@ -143,7 +144,7 @@ AUTH_USER_MODEL = "users.User"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
-    #'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+    # 'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 2,
 }
@@ -201,7 +202,8 @@ CACHES = {
 }
 
 ACTIVATION_EXPIRATION_TIME = 40
-ORDER_COOKING_EXPIRATION_TIME = 400  # TODO: TrackingOrder cache record could be removed from cache directly after delivering order (not implemented yet)
+# TODO: TrackingOrder cache record could be removed from cache directly after delivering order (not implemented yet)
+ORDER_COOKING_EXPIRATION_TIME = 400
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"  # "django.core.mail.backends.console.EmailBackend"
 
