@@ -6,6 +6,7 @@ from datetime import date
 from typing import Any
 
 from django.contrib.auth.decorators import login_required  # , user_passes_test
+
 # from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import redirect
