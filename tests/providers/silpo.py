@@ -1,12 +1,11 @@
-import time
-from typing import Literal
 import asyncio
 import random
+import time
 import uuid
+from typing import Literal
 
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import BackgroundTasks, FastAPI
 from pydantic import BaseModel
-
 
 STORAGE: dict[str, dict] = {}
 

@@ -4,9 +4,8 @@ import random
 import uuid
 
 import httpx
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import BackgroundTasks, FastAPI
 from pydantic import BaseModel, Field
-
 
 ORDER_STATUSES = ("not started", "delivery", "delivered")
 STORAGE: dict[str, dict] = {}

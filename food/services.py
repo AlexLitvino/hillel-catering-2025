@@ -1,15 +1,15 @@
-from dataclasses import dataclass, field, asdict
-from time import sleep
-from threading import Thread
 import random
+from dataclasses import asdict, dataclass, field
+from threading import Thread
+from time import sleep
 
-from django.db.models import QuerySet
 from django.conf import settings
+from django.db.models import QuerySet
 
-from shared.cache import CacheService
 from config import celery_app
+from food.providers import uber, uklon
+from shared.cache import CacheService
 
-from food.providers import uklon, uber
 from .enums import OrderStatus
 from .mapper import RESTAURANT_EXTERNAL_TO_INTERNAL
 from .models import Order, OrderItem, Restaurant

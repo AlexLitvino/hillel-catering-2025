@@ -1,18 +1,18 @@
 from typing import Any
 
-from rest_framework import  viewsets, routers, permissions, serializers
+from django.contrib.auth.hashers import make_password
+from django.db import transaction
+from django.shortcuts import get_object_or_404
+from rest_framework import permissions, routers, serializers, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
-from django.shortcuts import get_object_or_404
-
-from django.contrib.auth.hashers import make_password
-from django.db import transaction
 
 from .models import User
 from .services import ActivationService
+
 
 # validation class based on existing model
 class UserSerializer(serializers.ModelSerializer):

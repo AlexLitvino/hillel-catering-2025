@@ -3,13 +3,13 @@
     get(key: str)
     delete(key: str)
 """
-from typing import Any
-from dataclasses import asdict, dataclass
 import json
 import os
-
+from dataclasses import asdict, dataclass
+from typing import Any
 
 import redis
+
 
 @dataclass
 class Structure:

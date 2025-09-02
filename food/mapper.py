@@ -5,7 +5,7 @@ RESTAURANT: {
 """
 
 from .enums import OrderStatus
-from .providers import silpo, kfc, uber
+from .providers import kfc, silpo, uber
 
 RESTAURANT_EXTERNAL_TO_INTERNAL: dict[str, dict[str, OrderStatus]] = {
     "silpo": {
