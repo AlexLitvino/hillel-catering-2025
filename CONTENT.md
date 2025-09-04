@@ -579,8 +579,18 @@ docker snap install docker
 
 docker compose build && docker compose up -d
 
-In GitHub Repository Secrets
+In GitHub Repository Secrets create secrets 
+SERVER_HOST=PUBLIC_IP
+SERVER_PORT=22
+SERVER_USERNAME=root
+SERVER_SSH_PRIVATE_KEY=
 
+Create another key
+ssh-keygen -t rsa -b 4096 -C "GitHub RSA"
+github_rsa.pub - add to authorized keys
+and set github_rsa to SERVER_SSH_PRIVATE_KEY=github_rsa (NOT PUBLIC)
+
+docker compose exec api python manage.py createsuperuser
 
 ## pipenv commands
 pipenv shell
