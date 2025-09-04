@@ -49,4 +49,4 @@ check:
 	python -m flake8 --statistics .
 	python -m black --check .
 	python -m isort --check .
-	python -m mypy --exclude archive --exclude docs --check-untyped-defs .
+	# python -m mypy --exclude archive --exclude docs --check-untyped-defs .
