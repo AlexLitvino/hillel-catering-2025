@@ -31,7 +31,7 @@ class OrderResponse:
 
 class Client:
     # the url of running service
-    BASE_URL = f"http://{os.getenv("KFC_HOST", default="localhost")}:8002/api/orders"
+    BASE_URL = f"http://{os.getenv("KFC_HOST", default="localhost")}:{os.getenv("KFC_PORT", default="8002")}/api/orders"
 
     @classmethod
     def create_order(cls, order: OrderRequestBody):

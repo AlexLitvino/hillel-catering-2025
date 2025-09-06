@@ -543,6 +543,11 @@ gunicorn config.wsgi:application -b localhost:8010   - can't be run on Windows
 
 Configs: threads, workers, max-requests, max time per request
 
+Local start all-in-docker
+docker compose build
+docker compose up -d
+docker  exec -it hillel-catering-2025-api-1 /bin/bash
+
 ## Deployment on Digital Ocean
 
 ping <PUBLIC_IP>
