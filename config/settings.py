@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     # 3rd party
     "rest_framework",
     "rest_framework_simplejwt",
+    "drf_spectacular",
     # local apps
     "users",
     "food",
@@ -147,6 +148,12 @@ REST_FRAMEWORK = {
     # 'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 2,
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {"anon": "100/day", "user": "1000/day"},
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 # client - server communication
@@ -238,3 +245,13 @@ CELERY_TASK_QUEUES = {
 }
 
 CELERY_TASK_ALWAYS_EAGER = bool(os.getenv("CELERY_TASK_ALWAYS_EAGER", default=""))
+
+STATIC_ROOT=BASE_DIR / "staticfiles"
+STATIC_URL= "/static/"  # how to access static files
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Catering API",
+    "DESCRIPTION": "Hillel Catering API",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+}

@@ -597,6 +597,54 @@ and set github_rsa to SERVER_SSH_PRIVATE_KEY=github_rsa (NOT PUBLIC)
 
 docker compose exec api python manage.py createsuperuser
 
+docker compose logs --tail 10 -f api
+
+## Serving static files
+
+In settings specify dir where static files are:
+STATIC_ROOT=BASE_DIR / "staticfiles"
+python .\manage.py collectstatic
+
+Serving static files in DEBUG mode:
+```python
+# urls.py
+if settings.DEBUG is True:
+    urlpatterns += static(
+        settings.STATIC_URL,
+        document_root=settings.STATIC_ROOT
+    )
+```
+
+compose build api && docker compose up nginx
+
+docker compose exec nginx nginx -s reload   -restart only configuration without nginx service restart
+
+
+Throttling for end-point
+```python
+from rest_framework.throttling import UserRateThrottle
+
+class UserResourceThrottling(UserRateThrottle):
+    rate = "100/minute"
+
+class UsersAPIViewSet(viewsets.GenericViewSet):
+
+    throttle_classes = [UserResourceThrottling]
+```
+We could work with throttling classes as with permissions in get_permissions() function
+
+Another way is to create custom class based on BaseThrottle
+
+## OpenAPI
+Swagger Specification -> Open API Specification 
+
+Libs to create specification
+- drf-spectacular
+- drf-yasg
+
+If specification shouldn't be accessible by all, wrap it with if DEBUG==1
+
+
 ## pipenv commands
 pipenv shell
 pipenv graph
