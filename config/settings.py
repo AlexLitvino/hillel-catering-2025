@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import sys
 import uuid
 from datetime import timedelta
 from pathlib import Path
@@ -208,6 +209,14 @@ CACHES = {
     }
 }
 
+if "test" in sys.argv:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+        }
+    }
+
+
 ACTIVATION_EXPIRATION_TIME = 40
 # TODO: TrackingOrder cache record could be removed from cache directly after delivering order (not implemented yet)
 ORDER_COOKING_EXPIRATION_TIME = 400
@@ -245,6 +254,7 @@ CELERY_TASK_QUEUES = {
 }
 
 CELERY_TASK_ALWAYS_EAGER = bool(os.getenv("CELERY_TASK_ALWAYS_EAGER", default="1"))
+CELERY_TASK_EAGER_PROPAGATES=True
 
 STATIC_ROOT=BASE_DIR / "staticfiles"
 STATIC_URL= "/static/"  # how to access static files

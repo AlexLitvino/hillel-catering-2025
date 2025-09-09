@@ -687,8 +687,79 @@ response = self.anon.get(reverse("food-dishes-list"))
 router.register(prefix="", viewset=FoodAPIViewSet, basename="food")
 
 
+Update settings for test
+https://docs.djangoproject.com/en/5.2/topics/testing/tools/#django.test.override_settings
+https://docs.djangoproject.com/en/5.2/topics/testing/tools/#django.test.SimpleTestCase.modify_settings
+
+Mocking is process of changing dynamic behaviour into static values
+
+pytest-django
+
+docker compose exec api python -m pytest tests/
+
+https://factoryboy.readthedocs.io/en/stable/
+
+https://polyfactory.litestar.dev/latest/
+
+coverage.py
+pytest-cov
+
+tox - test with different Python versions
+
+### Load tests:
+Locust    https://locust.io/
+https://httpd.apache.org/docs/2.4/programs/ab.html
+
+
+
+
+
+
+
+## How to handle errors in one place
+```python
+from abc import ABC, abstractmethod
+from functools import wraps
+
+def error_handler(func):
+  @wraps(func)
+  def wrapper(*args, **kwargs):
+    try:
+        result = func(*args, **kwargs)
+    except Exception:
+        pass # process exception in common way
+    else:
+    return result
+  return wrapper
+
+def resolve_status(func):
+  @wraps(func)
+  def wrapper(*args, **kwargs):
+    status = func(*args, **kwargs)
+  # mapping external status to unified internal status
+    return status
+  return wrapper
+
+# Abstraction + Template
+
+class BaseClient(ABC):
+  @error_handler
+  @classmethod
+  @abstractmethod
+  def create_order(cls):
+    pass
+
+ @resolve_status
+ @classmethod
+ @abstractmethod
+ def get_order(cls):
+  pass
+```
+
+
 ## pipenv commands
 pipenv shell
 pipenv graph
 pipenv lock
 pipenv sync
+pipenv install -d pytest
