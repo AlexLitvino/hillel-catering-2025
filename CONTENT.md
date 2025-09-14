@@ -645,8 +645,121 @@ Libs to create specification
 If specification shouldn't be accessible by all, wrap it with if DEBUG==1
 
 
+## Testing
+https://docs.djangoproject.com/en/5.2/topics/testing/
+
+Run tests
+```shell
+python .\manage.py test tests.unit.test_user
+```
+
+Without specifying path to tests, Django will search for tests in <application>/tests.py files 
+
+Run tests in docker:
+docker compose up -d api 
+docker compose ps
+docker compose exec api python manage.py test tests.unit.test_user
+
+
+
+docker compose up -d --no-deps --build api    -rebuild container
+
+docker compose exec api python manage.py test tests.integration.test_user
+Test failed because Celery is not running:
+- CELERY_TASK_ALWAYS_EAGER = bool(os.getenv("CELERY_TASK_ALWAYS_EAGER", default="1"))
+- OR start broker
+
+
+Function `reverse` returns full API endpoint path by its name.
+It is convenient to use names in tests not to depend on endpoint paths.
+
+```python
+        self.anon = APIClient()
+        self.client = APIClient()
+        token = response.data["access"]
+
+        # Set the JWT token in the Authorization header
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+```
+
+food (router) - dishes (function name) - list
+response = self.anon.get(reverse("food-dishes-list"))
+router.register(prefix="", viewset=FoodAPIViewSet, basename="food")
+
+
+Update settings for test
+https://docs.djangoproject.com/en/5.2/topics/testing/tools/#django.test.override_settings
+https://docs.djangoproject.com/en/5.2/topics/testing/tools/#django.test.SimpleTestCase.modify_settings
+
+Mocking is process of changing dynamic behaviour into static values
+
+pytest-django
+
+docker compose exec api python -m pytest tests/
+
+https://factoryboy.readthedocs.io/en/stable/
+
+https://polyfactory.litestar.dev/latest/
+
+coverage.py
+pytest-cov
+
+tox - test with different Python versions
+
+### Load tests:
+Locust    https://locust.io/
+https://httpd.apache.org/docs/2.4/programs/ab.html
+
+
+
+
+
+
+
+## How to handle errors in one place
+```python
+from abc import ABC, abstractmethod
+from functools import wraps
+
+def error_handler(func):
+  @wraps(func)
+  def wrapper(*args, **kwargs):
+    try:
+        result = func(*args, **kwargs)
+    except Exception:
+        pass # process exception in common way
+    else:
+    return result
+  return wrapper
+
+def resolve_status(func):
+  @wraps(func)
+  def wrapper(*args, **kwargs):
+    status = func(*args, **kwargs)
+  # mapping external status to unified internal status
+    return status
+  return wrapper
+
+# Abstraction + Template
+
+class BaseClient(ABC):
+  @error_handler
+  @classmethod
+  @abstractmethod
+  def create_order(cls):
+    pass
+
+ @resolve_status
+ @classmethod
+ @abstractmethod
+ def get_order(cls):
+  pass
+```
+
+
 ## pipenv commands
 pipenv shell
 pipenv graph
 pipenv lock
 pipenv sync
+pipenv install -d pytest

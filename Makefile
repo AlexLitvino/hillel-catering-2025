@@ -13,6 +13,14 @@ build:
 clean:
 	docker image prune
 
+test:
+    # python manage.py test --noinput
+    python -m pytest tests/
+
+test.int:
+    python -m pytest tests/integration
+
+
 run:
 	python manage.py runserver
 
