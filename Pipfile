@@ -30,6 +30,7 @@ watchdog = "~=6.0.0"
 drf_spectacular = "~=0.28.0"
 pytest = "*"
 pytest-django = "*"
+pytest-mock = "*"
 
 [requires]
 python_version = "3.13"
