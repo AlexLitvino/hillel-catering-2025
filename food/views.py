@@ -1,31 +1,32 @@
 import csv
 import io
-from datetime import date
 import json
 from dataclasses import asdict
+from datetime import date
 from typing import Any
 
-from rest_framework import  viewsets, serializers, routers, permissions
-from rest_framework.decorators import action, permission_classes, api_view
-from rest_framework.request import Request
-from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied, ValidationError  # always returns status_code=400
-from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.pagination import PageNumberPagination
+from django.contrib.auth.decorators import login_required  # , user_passes_test
 
-from django.db import transaction
+# from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import redirect
+from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.utils.decorators import method_decorator
+from rest_framework import permissions, routers, serializers, viewsets
+from rest_framework.decorators import action  # , api_view , permission_classes
+from rest_framework.exceptions import PermissionDenied, ValidationError  # always returns status_code=400
+from rest_framework.pagination import LimitOffsetPagination  # , PageNumberPagination
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 from shared.cache import CacheService
-from .models import Restaurant, Dish, Order, OrderItem, OrderStatus
+from users.models import Role, User
+
 from .enums import DeliveryProvider
-from users.models import User, Role
-from .services import TrackingOrder, all_orders_cooked, schedule_order, schedule_delivery
+from .models import Dish, Order, OrderItem, OrderStatus, Restaurant
+from .services import TrackingOrder, all_orders_cooked, schedule_order
+
 
 class DishSerializer(serializers.ModelSerializer):
 
@@ -79,11 +80,10 @@ class KFCOrderSerializer(serializers.Serializer):
     pass
 
 
-
 class IsAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):
-        assert type(request.user) == User
+        assert isinstance(request.user, User)
         user: User = request.user
 
         if user.role == Role.ADMIN:
@@ -116,16 +116,18 @@ class BaseFilters:
         for key, value in kwargs.items():
 
             # filter shouldn't define extract methods for pagination query params
-            if key in ['page', 'size', 'limit', 'offset']:
+            if key in ["page", "size", "limit", "offset"]:
                 continue
 
             _key = self.camel_to_snake_case(key)
 
             try:
-                 extractor = getattr(self, f"extract_{_key}")
-            except AttributeError as error:
-                errors["queryParams"][key] = f"You forgot to define `extract_{_key}` method in  your {self.__class__.__name__} class"
-                #raise ValidationError(f"You forgot to define `extract_{_key}` method") from error
+                extractor = getattr(self, f"extract_{_key}")
+            except AttributeError:
+                errors["queryParams"][
+                    key
+                ] = f"You forgot to define `extract_{_key}` method in  your {self.__class__.__name__} class"
+                # raise ValidationError(f"You forgot to define `extract_{_key}` method") from error
                 raise ValidationError(errors)
             try:
                 _extracted_value = extractor(value)
@@ -173,9 +175,8 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
             case _:
                 return [permissions.IsAuthenticated()]
 
-
     @method_decorator(cache_page(10))
-    @action(methods=["get"], detail=False) # if True, primary key is expected in router
+    @action(methods=["get"], detail=False)  # if True, primary key is expected in router
     def dishes(self, request: Request):
         """
         [
@@ -208,7 +209,6 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
         serializer = DishSerializer(dishes, many=True)
         return Response(serializer.data)
 
-
     @action(methods=["post"], detail=False, url_path=r"create-dishes")
     def create_dish(self, request: Request):
         """
@@ -229,13 +229,12 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
 
         return Response(DishSerializer(dish).data, status=201)
 
-
     # HTTP POST food/orders
     # I renamed url_path for this method to create-orders as it stops working
     # ChatGPT states that we could have only one method with unique url_path and need to dispatch GET/POST inside method
     # or rename url_path
-    #@transaction.atomic
-    #@action(methods=["post"], detail=False, url_path=r"create-orders")
+    # @transaction.atomic
+    # @action(methods=["post"], detail=False, url_path=r"create-orders")
     def create_order(self, request: Request):
         """
         >>> HTTP Request
@@ -269,17 +268,13 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
             user=user,
             delivery_provider=request.data["delivery_provider"],
             eta=serializer.validated_data["eta"],
-            total=serializer.calculated_total
+            total=serializer.calculated_total,
         )
 
         items = serializer.validated_data["items"]
 
         for dish_order in items:
-            instance = OrderItem.objects.create(
-                dish=dish_order["dish"],
-                quantity=dish_order["quantity"],
-                order=order
-            )
+            instance = OrderItem.objects.create(dish=dish_order["dish"], quantity=dish_order["quantity"], order=order)
             print(f"New dish order item is created: {instance.pk}")
 
         print(f"New food order is created: {order.pk}. ETA: {order.eta}")
@@ -287,15 +282,15 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
         schedule_order(order)
 
         return Response(
-        #     data={
-        #     "id": order.pk,
-        #     "status": order.status,
-        #     "eta": order.eta,
-        #     "total": order.total
-        # }   # OR
-            OrderSerializer(order).data
-            , status=201)
-
+            #     data={
+            #     "id": order.pk,
+            #     "status": order.status,
+            #     "eta": order.eta,
+            #     "total": order.total
+            # }   # OR
+            OrderSerializer(order).data,
+            status=201,
+        )
 
     # HTTP GET /food/orders/4
     @action(methods=["get"], detail=False, url_path=r"orders/(?P<id>\d+)")
@@ -304,15 +299,18 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
         serializer = OrderSerializer(order)
         return Response(data=serializer.data)
 
-
-    #@action(methods=["get"], detail=False, url_path=r"orders")  # , name="orders_list" ???
+    # @action(methods=["get"], detail=False, url_path=r"orders")  # , name="orders_list" ???
     def all_orders(self, request):
         filters = FoodFilters(**request.query_params.dict())
 
-        #status: str | None = request.query_params.get("status")
-        #orders = Order.objects.all() if status is None else Order.objects.filter(status=status)
+        # status: str | None = request.query_params.get("status")
+        # orders = Order.objects.all() if status is None else Order.objects.filter(status=status)
 
-        orders = Order.objects.all() if not hasattr(filters, "delivery_provider") else Order.objects.filter(delivery_provider=filters.delivery_provider)
+        orders = (
+            Order.objects.all()
+            if not hasattr(filters, "delivery_provider")
+            else Order.objects.filter(delivery_provider=filters.delivery_provider)
+        )
 
         # # Page Number Pagination
         # paginator = PageNumberPagination()
@@ -333,10 +331,8 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
             serializer = OrderSerializer(page, many=True)
             return paginator.get_paginated_response(serializer.data)
 
-
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
-
 
     @action(methods=["get", "post"], detail=False, url_path=r"orders")
     def orders(self, request: Request) -> Response:
@@ -346,7 +342,7 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
             return self.all_orders(request)
 
 
-@login_required  #  uses Django’s session cookie (what browser sends after login)
+@login_required  # uses Django’s session cookie (what browser sends after login)
 def import_dishes(request):
     if request.method != "POST":
         raise ValueError(f"Method {request.method} is not allowed on this resource")
@@ -413,28 +409,21 @@ def uber_webhook(request):
 
     body = request.POST
     # request.POST returns QueryDict object with all values as lists. To get values need to use get or getlist methods
-    data = {'id': body.get('id'), 'status': body.get('status'), 'location': body.getlist('location')}
+    data = {"id": body.get("id"), "status": body.get("status"), "location": body.getlist("location")}
 
     # update TrackingOrder with new Status and Location
     cache = CacheService()
     order_id = cache.get("uber_delivery", key=data["id"])["internal_order_id"]
 
     order: Order = Order.objects.filter(id=order_id)
-    order.update(status=data['status'])
+    order.update(status=data["status"])
 
     tracking_order = TrackingOrder(**cache.get(namespace="orders", key=str(order.first().pk)))
-    tracking_order.delivery |= {
-        "status": data['status'],
-        "location": data["location"]
-    }
+    tracking_order.delivery |= {"status": data["status"], "location": data["location"]}
     cache.set(namespace="orders", key=str(order.first().pk), value=asdict(tracking_order))
 
     return JsonResponse({"message": "ok"})
 
 
 router = routers.DefaultRouter()
-router.register(
-    prefix="",
-    viewset=FoodAPIViewSet,
-    basename="food"
-)
+router.register(prefix="", viewset=FoodAPIViewSet, basename="food")

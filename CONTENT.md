@@ -533,6 +533,70 @@ CELERY_TASK_ALWAYS_EAGER = bool(os.getenv("CELERY_TASK_ALWAYS_EAGER", default=""
 tmux + tmuxinator
 
 
+Gunicorn:
+- Install
+- Configure
+- Run
+ 
+pipenv install gunicorn==23.0.0
+gunicorn config.wsgi:application -b localhost:8010   - can't be run on Windows
+
+Configs: threads, workers, max-requests, max time per request
+
+Local start all-in-docker
+docker compose build
+docker compose up -d
+docker  exec -it hillel-catering-2025-api-1 /bin/bash
+
+## Deployment on Digital Ocean
+
+ping <PUBLIC_IP>
+dig
+traceroute
+
+ssh root@PUBLIC_IP
+cat ~/.ssh/id_rsa.pub | copy
+
+In droplet open Console (in web)
+cd .ssh
+Add your public key to authorized_keys file
+
+Now you could login from your local machine by 
+ssh root@PUBLIC_IP
+
+Remote SSH - plugin for VS Code - will open VS Code from remote machine
+
+On GitHub, navigate to Project Settings -> Deploy keys
+On Droplet create new SSH key:
+cd .ssh
+ssh-keygen -t rsa -b 4096 -C "digital ocean instance"
+Copy public key to GitHub
+
+Clone repository on Droplet
+git clone SSH_URL
+
+On Droplet make copy of .env.default
+cp .env.default .env
+
+Install Docker on Droplet
+https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04
+docker snap install docker
+
+docker compose build && docker compose up -d
+
+In GitHub Repository Secrets create secrets 
+SERVER_HOST=PUBLIC_IP
+SERVER_PORT=22
+SERVER_USERNAME=root
+SERVER_SSH_PRIVATE_KEY=
+
+Create another key
+ssh-keygen -t rsa -b 4096 -C "GitHub RSA"
+github_rsa.pub - add to authorized keys
+and set github_rsa to SERVER_SSH_PRIVATE_KEY=github_rsa (NOT PUBLIC)
+
+docker compose exec api python manage.py createsuperuser
+
 ## pipenv commands
 pipenv shell
 pipenv graph

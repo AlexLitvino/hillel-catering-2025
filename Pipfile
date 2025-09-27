@@ -10,6 +10,7 @@ djangorestframework-simplejwt = "~=5.5.0"  # JWT Authentication
 psycopg2-binary = "~=2.9.10"
 redis = "~=5.0.0"  # Cache; changed from 6.2.0 to 5.0.0 because conflict with Celery
 celery = { version = "==5.4.0", extras = ["redis", "librabbitmq"] } # Worker
+gunicorn = "==23.0.0"
 
 [dev-packages]
 flake8="~=7.3.0"  # code quality

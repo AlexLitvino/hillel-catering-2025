@@ -1,15 +1,13 @@
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from time import sleep
-from threading import Thread
-import random
 
-from django.db.models import QuerySet
 from django.conf import settings
+from django.db.models import QuerySet
 
-from shared.cache import CacheService
 from config import celery_app
+from food.providers import uber, uklon
+from shared.cache import CacheService
 
-from food.providers import uklon, uber
 from .enums import OrderStatus
 from .mapper import RESTAURANT_EXTERNAL_TO_INTERNAL
 from .models import Order, OrderItem, Restaurant
@@ -41,6 +39,7 @@ class TrackingOrder:
         18: ...
     }
     """
+
     restaurants: dict = field(default_factory=dict)
     delivery: dict = field(default_factory=dict)
 
@@ -53,7 +52,7 @@ def all_orders_cooked(order_id: int):
     if all((payload["status"] == OrderStatus.COOKED for _, payload in tracking_order.restaurants.items())):
         order = Order.objects.filter(id=order_id)
         order.update(status=OrderStatus.COOKED)
-        #Order.objects.filter(id=order_id).update(status=OrderStatus.COOKED)
+        # Order.objects.filter(id=order_id).update(status=OrderStatus.COOKED)
         print("✅ All orders are COOKED")
 
         # Start orders delivery
@@ -159,12 +158,10 @@ def order_delivery_by_uber(order_id: int):
     # order.status = OrderStatus.DELIVERY
     # order.save()
 
-    _response: uber.OrderResponse = provider.create_order(
-        uber.OrderRequestBody(addresses=addresses, comments=comments)
-    )
+    _response: uber.OrderResponse = provider.create_order(uber.OrderRequestBody(addresses=addresses, comments=comments))
 
     # save mapping uber_id -> catering_id
-    cache.set(namespace='uber_delivery', key=_response.id, value={"internal_order_id": order_id})
+    cache.set(namespace="uber_delivery", key=_response.id, value={"internal_order_id": order_id})
 
     # get and process tracking order
     tracking_order = TrackingOrder(**cache.get("orders", str(order.pk)))
@@ -179,13 +176,10 @@ def order_delivery_by_uber(order_id: int):
     while not delivered:
         sleep(1)
 
-        tracking_order = TrackingOrder(
-            **cache.get(namespace="orders", key=str(order_id))
-        )
+        tracking_order = TrackingOrder(**cache.get(namespace="orders", key=str(order_id)))
 
         if tracking_order.delivery["status"] == OrderStatus.DELIVERED:
             break
-
 
     # update storage
     Order.objects.filter(id=order_id).update(status=OrderStatus.DELIVERED)
@@ -215,9 +209,7 @@ def order_in_silpo(order_id: int, items: QuerySet[OrderItem]):
         sleep(1)  # just a delay
 
         # GET ITEM FROM THE CACHE
-        tracking_order = TrackingOrder(
-            **cache.get(namespace="orders", key=str(order_id))
-        )
+        tracking_order = TrackingOrder(**cache.get(namespace="orders", key=str(order_id)))
         # validate
         silpo_order = tracking_order.restaurants.get(str(restaurant.pk))
         if not silpo_order:
@@ -230,10 +222,7 @@ def order_in_silpo(order_id: int, items: QuerySet[OrderItem]):
             # ✨ MAKE THE FIRST REQUEST IF NOT STARTED
             response: silpo.OrderResponse = client.create_order(
                 silpo.OrderRequestBody(
-                    order=[
-                        silpo.OrderItem(dish=item.dish.name, quantity=item.quantity)
-                        for item in items
-                    ]
+                    order=[silpo.OrderItem(dish=item.dish.name, quantity=item.quantity) for item in items]
                 )
             )
             internal_status: OrderStatus = get_internal_status(response.status)
@@ -244,7 +233,10 @@ def order_in_silpo(order_id: int, items: QuerySet[OrderItem]):
                 "status": internal_status,
             }
             cache.set(
-                namespace="orders", key=str(order_id), value=asdict(tracking_order), ttl=settings.ORDER_COOKING_EXPIRATION_TIME
+                namespace="orders",
+                key=str(order_id),
+                value=asdict(tracking_order),
+                ttl=settings.ORDER_COOKING_EXPIRATION_TIME,
             )
         else:
             # ✨ IF ALREADY HAVE EXTERNAL ID - JUST RETRIEVE THE ORDER
@@ -255,12 +247,13 @@ def order_in_silpo(order_id: int, items: QuerySet[OrderItem]):
             print(f"Tracking for Silpo Order with HTTP GET /orders. Status: {internal_status}")
 
             if silpo_order["status"] != internal_status:  # STATUS HAS CHANGED
-                tracking_order.restaurants[str(restaurant.pk)][
-                    "status"
-                ] = internal_status
+                tracking_order.restaurants[str(restaurant.pk)]["status"] = internal_status
                 print(f"Silpo order status changed to {internal_status}")
                 cache.set(
-                    namespace="orders", key=str(order_id), value=asdict(tracking_order), ttl=settings.ORDER_COOKING_EXPIRATION_TIME
+                    namespace="orders",
+                    key=str(order_id),
+                    value=asdict(tracking_order),
+                    ttl=settings.ORDER_COOKING_EXPIRATION_TIME,
                 )
 
                 # if started cooking
@@ -285,6 +278,7 @@ def order_in_silpo(order_id: int, items: QuerySet[OrderItem]):
                 cooked = True
                 all_orders_cooked(order_id)
 
+
 @celery_app.task(queue="high_priority")
 def order_in_kfc(order_id: int, items):
     client = kfc.Client()
@@ -298,9 +292,7 @@ def order_in_kfc(order_id: int, items):
     tracking_order = TrackingOrder(**cache.get(namespace="orders", key=str(order_id)))
 
     response: kfc.OrderResponse = client.create_order(
-        kfc.OrderRequestBody(
-            order=[kfc.OrderItem(dish=item.dish.name, quantity=item.quantity) for item in items]
-        )
+        kfc.OrderRequestBody(order=[kfc.OrderItem(dish=item.dish.name, quantity=item.quantity) for item in items])
     )
 
     internal_status = get_internal_status(response.status)
@@ -312,7 +304,9 @@ def order_in_kfc(order_id: int, items):
     }
 
     print(f"Created MOCKED KFC Order. External ID: {response.id}, Status: {internal_status}")
-    cache.set(namespace="orders", key=str(order_id), value=asdict(tracking_order), ttl=settings.ORDER_COOKING_EXPIRATION_TIME)
+    cache.set(
+        namespace="orders", key=str(order_id), value=asdict(tracking_order), ttl=settings.ORDER_COOKING_EXPIRATION_TIME
+    )
 
     # save another item form Mapping to the Internal Order
     cache.set(
@@ -325,13 +319,19 @@ def order_in_kfc(order_id: int, items):
 
     # 🚧 CHECK IF ALL ORDERS ARE COOKED
     if all_orders_cooked(order_id):
-        cache.set(namespace="orders", key=str(order_id), value=asdict(tracking_order), ttl=settings.ORDER_COOKING_EXPIRATION_TIME)
+        cache.set(
+            namespace="orders",
+            key=str(order_id),
+            value=asdict(tracking_order),
+            ttl=settings.ORDER_COOKING_EXPIRATION_TIME,
+        )
         Order.objects.filter(id=order_id).update(status=OrderStatus.COOKED)
 
 
 # Now building request body is implemented in specific function, but could be moved to separate function
 # def build_request_body():
 #     pass
+
 
 def schedule_order(order: Order):
     # define services and data state
@@ -347,24 +347,24 @@ def schedule_order(order: Order):
         }
 
     # update cache instance only once in the end
-    cache.set(namespace="orders", key=str(order.pk), value=asdict(tracking_order), ttl=settings.ORDER_COOKING_EXPIRATION_TIME)
+    cache.set(
+        namespace="orders", key=str(order.pk), value=asdict(tracking_order), ttl=settings.ORDER_COOKING_EXPIRATION_TIME
+    )
 
     # start processing after cache is complete
     # threads = []
     for restaurant, items in items_by_restaurants.items():
         match restaurant.name.lower():
             case "silpo":
-                #thread = Thread(target=order_in_silpo, args=(order.pk, items), daemon=True)
+                # thread = Thread(target=order_in_silpo, args=(order.pk, items), daemon=True)
 
                 order_in_silpo.delay(order.pk, items)
                 # or
                 # order_in_silpo.apply_async()
             case "kfc":
-                #thread = Thread(target=order_in_kfc, args=(order.pk, items), daemon=True)
+                # thread = Thread(target=order_in_kfc, args=(order.pk, items), daemon=True)
                 order_in_kfc.delay(order.pk, items)
             case _:
-                raise ValueError(
-                    f"Restaurant {restaurant.name} is not available for processing"
-                )
+                raise ValueError(f"Restaurant {restaurant.name} is not available for processing")
         # thread.start()
         # threads.append(thread)

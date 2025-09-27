@@ -1,11 +1,13 @@
 import uuid
 
-from django.core.mail import send_mail
 from django.conf import settings
+from django.core.mail import send_mail
 
 from config import celery_app
 from shared.cache import CacheService
+
 from .models import User
+
 
 class ActivationService:
 
@@ -30,10 +32,10 @@ class ActivationService:
         }
         3. Return None
         """
-        payload = {
-            "user_id": user_id
-        }
-        self.cache.set(namespace="activation", key=str(activation_key), value=payload, ttl=settings.ACTIVATION_EXPIRATION_TIME)
+        payload = {"user_id": user_id}
+        self.cache.set(
+            namespace="activation", key=str(activation_key), value=payload, ttl=settings.ACTIVATION_EXPIRATION_TIME
+        )
         return None
 
     @staticmethod
@@ -44,10 +46,12 @@ class ActivationService:
 
         # SMTP Client Send Email Request
         activation_link = f"https://frontend.catering.com/activation/{activation_key}"
-        send_mail(subject="User Activation",
-                  message=f"Please activate your account: {activation_link}",
-                  from_email="admin@catering.com",
-                  recipient_list=[email])
+        send_mail(
+            subject="User Activation",
+            message=f"Please activate your account: {activation_link}",
+            from_email="admin@catering.com",
+            recipient_list=[email],
+        )
 
     def activate_user(self, activation_key: str) -> None:
         user_cache_payload: dict | None = self.cache.get(namespace="activation", key=activation_key)
@@ -60,4 +64,3 @@ class ActivationService:
         user.save()
         # OR User.objects.filter(id=user...).update(is_active=True)
         self.cache.delete(namespace="activation", key=activation_key)
-

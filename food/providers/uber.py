@@ -1,6 +1,6 @@
 import enum
-from dataclasses import asdict, dataclass
 import os
+from dataclasses import asdict, dataclass
 
 import httpx
 
@@ -28,7 +28,9 @@ class OrderResponse:
 
 class Client:
     # the url of running service
-    BASE_URL = f"http://{os.getenv("UBER_HOST", default="localhost")}:8004/drivers/orders"
+    BASE_URL = (
+        f"http://{os.getenv("UBER_HOST", default="localhost")}:{os.getenv("UBER_PORT", default="8004")}/drivers/orders"
+    )
 
     @classmethod
     def create_order(cls, order: OrderRequestBody):

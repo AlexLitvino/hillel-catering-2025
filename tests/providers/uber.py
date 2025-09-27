@@ -4,13 +4,15 @@ import random
 import uuid
 
 import httpx
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import BackgroundTasks, FastAPI
 from pydantic import BaseModel, Field
-
 
 ORDER_STATUSES = ("not started", "delivery", "delivered")
 STORAGE: dict[str, dict] = {}
-CATERING_API_WEBHOOK_URL = f"http://{os.getenv("API_HOST", default="localhost")}:8000/webhooks/uber/de496ba9-faf3-4d31-b1c9-1212490fa248/"
+CATERING_API_WEBHOOK_URL = (
+    f"http://{os.getenv("API_HOST", default="localhost")}:{os.getenv("API_PORT", default="8000")}"
+    f"/webhooks/uber/de496ba9-faf3-4d31-b1c9-1212490fa248/"
+)
 
 
 app = FastAPI()
@@ -19,6 +21,7 @@ app = FastAPI()
 class OrderRequestBody(BaseModel):
     addresses: list[str] = Field(min_length=1)
     comments: list[str] = Field(min_length=1)
+
 
 async def send_notification(order_id, status, location):
     async with httpx.AsyncClient() as client:
@@ -33,6 +36,7 @@ async def send_notification(order_id, status, location):
             print("API connection failed")
         else:
             print(f"UBER: {CATERING_API_WEBHOOK_URL} notified about {status}")
+
 
 async def update_order_status(order_id):
     await asyncio.sleep(random.randint(1, 2))  # wait from "not started" to "delivery" status
@@ -66,11 +70,12 @@ async def make_order(body: OrderRequestBody, background_tasks: BackgroundTasks):
         "status": "not started",
         "addresses": body.addresses,
         "comments": body.comments,
-        "location": (random.random(), random.random())
+        "location": (random.random(), random.random()),
     }
     background_tasks.add_task(update_order_status, order_id)
 
     return STORAGE.get(order_id, {"error": "No such order"})
+
 
 @app.get("/drivers/orders/{order_id}")
 async def get_order(order_id: str):

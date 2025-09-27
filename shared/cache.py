@@ -1,15 +1,15 @@
 """
-    set(key: str, value: dict)
-    get(key: str)
-    delete(key: str)
+set(key: str, value: dict)
+get(key: str)
+delete(key: str)
 """
-from typing import Any
-from dataclasses import asdict, dataclass
+
 import json
 import os
-
+from dataclasses import dataclass  # , asdict
 
 import redis
+
 
 @dataclass
 class Structure:
@@ -24,7 +24,7 @@ class CacheService:
     """
 
     def __init__(self):
-        self.connection: redis.Redis =  redis.Redis.from_url(
+        self.connection: redis.Redis = redis.Redis.from_url(
             os.getenv("DJANGO_CACHE_URL", default="redis://cache:6379/0")
         )
 
@@ -37,20 +37,12 @@ class CacheService:
         #     payload = asdict(value)
 
         payload = json.dumps(value)
-        self.connection.set(
-            name=self._build_key(namespace, key),
-            value=payload,
-            ex=ttl
-        )
+        self.connection.set(name=self._build_key(namespace, key), value=payload, ex=ttl)
 
     def get(self, namespace: str, key: str):
-        result: str = self.connection.get(
-            self._build_key(namespace, key)
-        )
+        result: str = self.connection.get(self._build_key(namespace, key))
 
         return json.loads(result)
 
     def delete(self, namespace: str, key: str):
-        self.connection.delete(
-            self._build_key(namespace, key)
-        )
+        self.connection.delete(self._build_key(namespace, key))
