@@ -13,6 +13,7 @@ celery = { version = "==5.4.0", extras = ["redis", "librabbitmq"] } # Worker
 gunicorn = "==23.0.0"
 httpx = "~=0.28.1"
 drf-spectacular = "==0.28.0"
+openai = "*"
 
 [dev-packages]
 flake8="~=7.3.0"  # code quality

@@ -711,11 +711,6 @@ Locust    https://locust.io/
 https://httpd.apache.org/docs/2.4/programs/ab.html
 
 
-
-
-
-
-
 ## How to handle errors in one place
 ```python
 from abc import ABC, abstractmethod
@@ -755,6 +750,21 @@ class BaseClient(ABC):
  def get_order(cls):
   pass
 ```
+
+
+## LLM
+https://huggingface.co - "github" for AI models
+Small models:- QWEN- PHI-4 (Phi-4-mini-instruct)
+https://github.com/openai/openai-python
+
+pipenv install openai
+
+OPEN_AI_API_KEY
+
+
+celery.beat - periodic tasks
+
+https://youtu.be/7DEagGQ3IX0?t=8825
 
 
 ## pipenv commands

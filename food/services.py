@@ -10,8 +10,14 @@ from shared.cache import CacheService
 
 from .enums import OrderStatus
 from .mapper import RESTAURANT_EXTERNAL_TO_INTERNAL
-from .models import Order, OrderItem, Restaurant
+from .models import Dish, Order, OrderItem, Restaurant
 from .providers import kfc, silpo
+
+from users.models import User, Role
+from shared.cache import CacheService
+from shared.llm import LLMService
+
+from food.serializers import DishSerializer, OrderSerializer
 
 
 @dataclass
@@ -368,3 +374,63 @@ def schedule_order(order: Order):
                 raise ValueError(f"Restaurant {restaurant.name} is not available for processing")
         # thread.start()
         # threads.append(thread)
+
+
+
+def get_food_recommendations(user_id: int):
+    cache = CacheService()
+    items = cache.get("recommendations", str(user_id))
+
+    serializer = DishSerializer(items["dishes"] if items else [], many=True)
+
+    return serializer.data
+
+@celery_app.task(queue="default")
+def generate_recommendations():
+    """Generate recommendations for each user in the system and put them to the cache."""
+
+    LIMIT_ORDERS = 5  # how many orders per user so all orders will fit to context window of LLM
+
+    # (1) setup (define initial instances)
+    users = User.objects.filter(role=Role.CUSTOMER)
+    llm_service = LLMService()
+    cache = CacheService()
+
+    for user in users:
+        print(f"✨ Checking orders for {user.email}")
+        last_orders = user.orders.filter(status=OrderStatus.DELIVERED).order_by("-id")[:LIMIT_ORDERS]
+        order_serializer = OrderSerializer(last_orders, many=True)
+
+        print(f"✨ Orders Data: {order_serializer.data}")
+
+        prompt = f"""
+        Below you can see the list of orders with items details:
+        {order_serializer.data}
+
+        Return me up to {LIMIT_ORDERS} top dishes according to this list.
+        Return it without any verbosity except of comma separated ids.
+
+        The response will be used in python to split by comma and convert to integer all the ids.
+        """
+
+        # (5) LLM inference
+        response = llm_service.ask(prompt=prompt)
+        # response = "2,5,3"
+        print(f"✨ LLM Result: {response}")
+
+        # (6.1) validate dishes have valid ids
+        try:
+            dishes_ids: list[int] = [int(dish_id) for dish_id in response.split(",")]
+        except ValueError as error:
+            raise ValueError(f"LLM return invalid IDs for dishes: {response}") from error
+
+        # (6.2) Evaluate ids (llm can halucinate)
+        dishes = Dish.objects.filter(id__in=dishes_ids)
+        if dishes.count() != len(dishes_ids):
+            raise ValueError(f"Some of returned dishes are not in the database")
+
+        # Build reccommendation for the specific user in the cache
+        serializer = DishSerializer(dishes, many=True)
+        cache_value = {"dishes": serializer.data}
+        cache.set(namespace="recommendations", key=str(user.pk), value=cache_value)
+        print(f"✨ Data saved: {cache_value}")

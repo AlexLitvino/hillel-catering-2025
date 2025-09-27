@@ -25,59 +25,61 @@ from users.models import Role, User
 
 from .enums import DeliveryProvider
 from .models import Dish, Order, OrderItem, OrderStatus, Restaurant
-from .services import TrackingOrder, all_orders_cooked, schedule_order
+from .serializers import *
+from .services import TrackingOrder, all_orders_cooked, schedule_order, get_food_recommendations, generate_recommendations
 
 
-class DishSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Dish
-        exclude = ["restaurant"]  # exclude the same field from nested JSON
-
-
-class RestaurantSerializer(serializers.ModelSerializer):
-
-    # nested serializer
-    dishes = DishSerializer(many=True)
-
-    class Meta:
-        model = Restaurant
-        fields = "__all__"  # to not specify all fields
-
-
-class OrderItemSerializer(serializers.Serializer):
-    dish = serializers.PrimaryKeyRelatedField(queryset=Dish.objects.all())
-    quantity = serializers.IntegerField(min_value=1, max_value=20)
-
-
-class OrderSerializer(serializers.Serializer):
-    id = serializers.PrimaryKeyRelatedField(read_only=True)
-    items = OrderItemSerializer(many=True)
-    eta = serializers.DateField()
-    total = serializers.IntegerField(min_value=1, read_only=True)
-    status = serializers.ChoiceField(OrderStatus.choices(), read_only=True)
-    delivery_provider = serializers.CharField()
-
-    @property
-    def calculated_total(self) -> int:
-        total = 0
-        for item in self.validated_data["items"]:
-            dish: Dish = item["dish"]
-            quantity: int = item["quantity"]
-            total += dish.price * quantity
-
-        return total
-
-    # def validate_<any_filed_name>
-    def validate_eta(self, value: date):
-        if (value - date.today()).days < 1:
-            raise ValidationError("ETA must be min 1 day after today")
-        else:
-            return value
-
-
-class KFCOrderSerializer(serializers.Serializer):
-    pass
+# Serializers moved to separate module to avoid cyclic import in service.py
+# class DishSerializer(serializers.ModelSerializer):
+#
+#     class Meta:
+#         model = Dish
+#         exclude = ["restaurant"]  # exclude the same field from nested JSON
+#
+#
+# class RestaurantSerializer(serializers.ModelSerializer):
+#
+#     # nested serializer
+#     dishes = DishSerializer(many=True)
+#
+#     class Meta:
+#         model = Restaurant
+#         fields = "__all__"  # to not specify all fields
+#
+#
+# class OrderItemSerializer(serializers.Serializer):
+#     dish = serializers.PrimaryKeyRelatedField(queryset=Dish.objects.all())
+#     quantity = serializers.IntegerField(min_value=1, max_value=20)
+#
+#
+# class OrderSerializer(serializers.Serializer):
+#     id = serializers.PrimaryKeyRelatedField(read_only=True)
+#     items = OrderItemSerializer(many=True)
+#     eta = serializers.DateField()
+#     total = serializers.IntegerField(min_value=1, read_only=True)
+#     status = serializers.ChoiceField(OrderStatus.choices(), read_only=True)
+#     delivery_provider = serializers.CharField()
+#
+#     @property
+#     def calculated_total(self) -> int:
+#         total = 0
+#         for item in self.validated_data["items"]:
+#             dish: Dish = item["dish"]
+#             quantity: int = item["quantity"]
+#             total += dish.price * quantity
+#
+#         return total
+#
+#     # def validate_<any_filed_name>
+#     def validate_eta(self, value: date):
+#         if (value - date.today()).days < 1:
+#             raise ValidationError("ETA must be min 1 day after today")
+#         else:
+#             return value
+#
+#
+# class KFCOrderSerializer(serializers.Serializer):
+#     pass
 
 
 class IsAdmin(permissions.BasePermission):
@@ -171,6 +173,8 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
     def get_permissions(self):
         match self.action:
             case "all_orders" | "create_dish":
+                return [permissions.IsAuthenticated(), IsAdmin()]
+            case "recommendations_generate":
                 return [permissions.IsAuthenticated(), IsAdmin()]
             case _:
                 return [permissions.IsAuthenticated()]
@@ -340,6 +344,18 @@ class FoodAPIViewSet(viewsets.GenericViewSet):
             return self.create_order(request)
         else:
             return self.all_orders(request)
+
+    @action(methods=["post"], detail=False, url_path=r"recommendations/generate")
+    def recommendations_generate(self, request: Request) -> Response:
+        generate_recommendations.delay()
+
+        return Response(data={"message": "Users recommendations started generating"})
+
+    @action(methods=["get"], detail=False, url_path=r"recommendations")
+    def recommendations(self, request: Request) -> Response:
+        recommendations = get_food_recommendations(request.user.pk)
+
+        return Response(data=recommendations)
 
 
 @login_required  # uses Django’s session cookie (what browser sends after login)
