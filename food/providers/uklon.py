@@ -28,8 +28,8 @@ class OrderResponse:
 
 class Client:
     # the url of running service
-    BASE_URL = \
-        f"http://{os.getenv("UKLON_HOST", default="localhost")}:{os.getenv("UKLON_PORT", default="8003")}/drivers/orders"
+    BASE_URL = (f"http://{os.getenv("UKLON_HOST", default="localhost")}:{os.getenv("UKLON_PORT", default="8003")}"
+                f"/drivers/orders")
 
     @classmethod
     def create_order(cls, order: OrderRequestBody):
