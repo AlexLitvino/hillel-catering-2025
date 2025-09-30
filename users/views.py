@@ -8,6 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.throttling import BaseThrottle, UserRateThrottle
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .models import User
@@ -41,10 +42,39 @@ class UserResendActivationSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
 
+class UserResourceThrottling(UserRateThrottle):
+    rate = "100/minute"
+
+# class AdvancedThrottling(BaseThrottle):
+#     def __init__(self):
+#         self.history = {}
+
+#     def allow_request(self, request: Request, view: permissions.APIView) -> bool:
+#         from time import time
+
+#         ident = self.get_ident(request)  # Client IP
+#         now = time()
+#         window = 60  # 1 minute
+#         limit = 10  # max 10 requests
+
+#         history = self.history.get(ident, [])
+#         history = [ts for ts in history if ts > now - window]
+
+#         if len(history) >= limit:
+#             return False
+
+#         history.append(now)
+#         self.history[ident] = history
+
+#         return True
+
+
 class UsersAPIViewSet(viewsets.GenericViewSet):
 
     authentication_classes = [JWTAuthentication]
     # permission_classes = [permissions.AllowAny]  # was IsAuthenticate but user creation should be allowed without auth
+
+    throttle_classes = [UserResourceThrottling]
 
     def get_permissions(self):
         # return super().get_permissisons()

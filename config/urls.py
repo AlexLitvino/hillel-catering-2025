@@ -15,11 +15,14 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from django.conf.urls.static import static
+from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework_simplejwt.views import (  # TokenRefreshView,
     TokenObtainPairView,
 )
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 from food.views import import_dishes, kfc_webhook
 from food.views import router as food_router
@@ -42,3 +45,15 @@ urlpatterns = [
         uber_webhook,
     ),
 ]
+
+if settings.DEBUG is True:
+    urlpatterns += static(
+        settings.STATIC_URL,
+        document_root=settings.STATIC_ROOT
+    )
+    # OpenAPI URLS
+    urlpatterns += [
+        path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+        path("api/schema/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+        path("api/schema/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc")
+    ]
