@@ -764,7 +764,18 @@ OPEN_AI_API_KEY
 
 celery.beat - periodic tasks
 
-https://youtu.be/7DEagGQ3IX0?t=8825
+
+## AI Chat Implementation 
+python manage.py startapp chat
+В settings.py добавить chat в INSTALLED_APPS
+
+HTTP GET /chat/ID    - get all messages
+  - [{}, {}, {}]
+HTTP POST /chat    - post new message
+ - Requests to create session {"content": I want to order"}
+ - Response {"content": "What do you want to order?", "session_id":13}
+ - Request to add message  {"content": "What do you have?", "session_id":13}
+
 
 
 ## pipenv commands
